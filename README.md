@@ -1,1 +1,1 @@
-# meilidash
+# meilisync-admin
