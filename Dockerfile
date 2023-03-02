@@ -4,9 +4,9 @@ RUN mkdir -p /meilisync_admin
 WORKDIR /meilisync_admin
 COPY pyproject.toml poetry.lock /meilisync_admin/
 ENV POETRY_VIRTUALENVS_CREATE false
-RUN pip3 install poetry && poetry install --no-root -E mysql -E postgres
+RUN pip3 install poetry && poetry install --no-root
 COPY . /meilisync_admin
-RUN poetry install -E all
+RUN poetry install
 
 FROM python:3.9-slim
 WORKDIR /meilisync_admin
