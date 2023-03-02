@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 from tortoise.exceptions import DoesNotExist
 
+from meilisync_admin import scheduler
 from meilisync_admin.exceptions import (
     custom_http_exception_handler,
     exception_handler,
@@ -53,3 +54,9 @@ async def startup():
     aerich = Command(TORTOISE_ORM)
     await aerich.init()
     await aerich.upgrade()
+    await scheduler.startup()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    scheduler.shutdown()

@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     DB_URL: str
     REDIS_URL: str
     API_SECRET: str
+    MEILI_API_KEY: Optional[str]
+    MEILI_API_URL: str
     ENV = "production"
     SENTRY_DSN: Optional[str]
 
