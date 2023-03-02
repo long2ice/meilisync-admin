@@ -56,11 +56,11 @@ async def start_source(source: Source):
                         f'Full data sync for table "{source.label}.{sync.table}" '
                         f"done! No data found."
                     )
-    logger.info(
-        f'Start increment sync data from "{source.label}" to MeiliSearch, tables: {tables}...'
-    )
 
     async def _():
+        logger.info(
+            f'Start increment sync data from "{source.label}" to MeiliSearch, tables: {tables}...'
+        )
         async for event in source_obj:
             if isinstance(event, Event):
                 await meili.handle_event(event)
@@ -93,5 +93,4 @@ async def restart_source(source: Source):
     logger.info(f'Restart source "{source.label}"...')
     source_id = source.pk
     remove_source(source_id)
-    source = await Source.get(pk=source_id)
     await start_source(source)

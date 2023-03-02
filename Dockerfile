@@ -13,3 +13,5 @@ WORKDIR /meilisync_admin
 COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /meilisync_admin /meilisync_admin
+ENTRYPOINT ["uvicorn", "meilisync_admin.app:app", "--host", "0.0.0.0"]
+CMD ["--port", "8000"]

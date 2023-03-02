@@ -29,9 +29,10 @@ TORTOISE_ORM = {
     },
     "connections": {"default": settings.DB_URL},
 }
-sentry_sdk.init(
-    dsn=settings.SENTRY_DSN,
-    environment=settings.ENV,
-    integrations=[RedisIntegration()],
-    traces_sample_rate=1.0,
-)
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENV,
+        integrations=[RedisIntegration()],
+        traces_sample_rate=1.0,
+    )

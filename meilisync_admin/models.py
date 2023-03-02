@@ -20,8 +20,11 @@ class Sync(BaseModel):
     label = fields.CharField(max_length=255)
     source: fields.ForeignKeyRelation[Source] = fields.ForeignKeyField("models.Source")
     full_sync = fields.BooleanField(default=False)
-    table = fields.CharField(max_length=255, unique=True)
+    table = fields.CharField(max_length=255)
     index = fields.CharField(max_length=255)
     primary_key = fields.CharField(max_length=255, default="id")
     enabled = fields.BooleanField(default=True)
     fields = fields.JSONField(null=True)
+
+    class Meta:
+        unique_together = [("source", "table")]
