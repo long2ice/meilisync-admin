@@ -678,9 +678,10 @@ motor = {version = "*", optional = true}
 psycopg2-binary = {version = "*", optional = true}
 pyyaml = "*"
 redis = "*"
+sentry-sdk = "*"
 
 [package.extras]
-all = ["asyncmy", "motor", "psycopg2-binary", "redis"]
+all = ["asyncmy", "motor", "psycopg2-binary", "redis", "sentry-sdk"]
 mongodb = ["motor"]
 mysql = ["asyncmy"]
 postgres = ["psycopg2-binary"]
@@ -691,7 +692,7 @@ sentry = ["sentry-sdk"]
 type = "git"
 url = 'https://github.com/meilisync/meilisync.git'
 reference = "HEAD"
-resolved_reference = "406cce1b4108aeec27dac1399e5a91fa9beb814e"
+resolved_reference = "6c57a49b41a5948d95e8b93ddeee2ed3c2612f13"
 
 [[package]]
 name = "motor"
