@@ -28,3 +28,8 @@ class Sync(BaseModel):
 
     class Meta:
         unique_together = [("source", "table")]
+
+
+class SyncLog(BaseModel):
+    sync: fields.ForeignKeyRelation[Sync] = fields.ForeignKeyField("models.Sync")
+    count = fields.IntField(default=0)
