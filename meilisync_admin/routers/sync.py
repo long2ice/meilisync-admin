@@ -22,7 +22,6 @@ async def get_list(
 class CreateBody(BaseModel):
     label: str
     source_id: int
-    meilisearch_id: int
     full_sync: bool = True
     table: str
     index: str
@@ -49,7 +48,6 @@ async def delete(pk: int):
 
 class UpdateBody(BaseModel):
     source_id: Optional[int]
-    meilisearch_id: Optional[int]
     full_sync: Optional[bool]
     table: Optional[str]
     index: Optional[str]
