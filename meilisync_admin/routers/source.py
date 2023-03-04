@@ -37,7 +37,7 @@ async def get_list(
     limit: int = 10,
     offset: int = 0,
 ):
-    await Source.all().limit(limit).offset(offset).order_by("-id")
+    return await Source.all().limit(limit).offset(offset).order_by("-id")
 
 
 class CreateBody(CheckBody):
@@ -51,7 +51,9 @@ async def create(
     try:
         await Source.create(**body.dict())
     except IntegrityError:
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Source already exists")
+        raise HTTPException(
+            status_code=HTTP_409_CONFLICT, detail="Source already exists"
+        )
 
 
 class UpdateBody(BaseModel):

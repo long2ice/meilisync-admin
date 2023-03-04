@@ -5,7 +5,6 @@ from starlette.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 from tortoise.exceptions import DoesNotExist
 
-from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.exceptions import (
     custom_http_exception_handler,
     exception_handler,
@@ -14,6 +13,7 @@ from meilisync_admin.exceptions import (
 )
 from meilisync_admin.logging import init_logging
 from meilisync_admin.routers import router
+from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.settings import TORTOISE_ORM, settings
 
 if settings.DEBUG:

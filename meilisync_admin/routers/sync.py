@@ -17,7 +17,7 @@ async def get_list(
     limit: int = 10,
     offset: int = 0,
 ):
-    await Sync.all().limit(limit).offset(offset).order_by("-id")
+    return await Sync.all().limit(limit).offset(offset).order_by("-id")
 
 
 class CreateBody(BaseModel):
