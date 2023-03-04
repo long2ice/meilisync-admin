@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -6,7 +7,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CON
 from tortoise.contrib.pydantic import pydantic_queryset_creator
 from tortoise.exceptions import IntegrityError
 
-from meilisync_admin.models import Sync
+from meilisync_admin.models import Sync, SyncLog
 
 router = APIRouter()
 
@@ -63,3 +64,20 @@ async def update(
 ):
     sync = await Sync.get(pk=pk)
     await sync.update_from_dict(body.dict(exclude_none=True)).save()
+
+
+@router.get("/logs", response_model=pydantic_queryset_creator(SyncLog))
+async def logs(
+    start: datetime.datetime,
+    end: datetime.datetime,
+    sync_id: Optional[int] = None,
+    source_id: Optional[int] = None,
+):
+    qs = SyncLog.filter(
+        created_at__range=(start, end),
+    )
+    if sync_id:
+        qs = qs.filter(sync_id=sync_id)
+    if source_id:
+        qs = qs.filter(sync__source_id=source_id)
+    return await qs.all()
