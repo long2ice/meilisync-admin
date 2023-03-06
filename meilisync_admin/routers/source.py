@@ -51,9 +51,7 @@ async def create(
     try:
         await Source.create(**body.dict())
     except IntegrityError:
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT, detail="Source already exists"
-        )
+        raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Source already exists")
 
 
 class UpdateBody(BaseModel):

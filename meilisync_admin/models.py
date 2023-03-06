@@ -1,4 +1,4 @@
-from meilisync.enums import SourceType
+from meilisync.enums import EventType, SourceType
 from tortoise import Model, fields
 
 
@@ -32,4 +32,5 @@ class Sync(BaseModel):
 
 class SyncLog(BaseModel):
     sync: fields.ForeignKeyRelation[Sync] = fields.ForeignKeyField("models.Sync")
+    type = fields.CharEnumField(enum_type=EventType, default=EventType.create)
     count = fields.IntField(default=0)

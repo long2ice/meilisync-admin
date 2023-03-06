@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from loguru import logger
 from meilisync.discover import get_progress, get_source
-from meilisync.enums import ProgressType
+from meilisync.enums import EventType, ProgressType
 from meilisync.meili import Meili
 from meilisync.schemas import Event
 from meilisync.settings import Sync as SyncSettings
@@ -24,7 +24,7 @@ class Scheduler:
 
     @classmethod
     async def _start_source(cls, source: Source):
-        stats: Dict[str, int] = {}
+        stats: Dict[str, Dict[EventType, int]] = {}
         lock = asyncio.Lock()
         progress_cls = get_progress(ProgressType.redis)
         syncs = await Sync.filter(enabled=True, source=source).all()
@@ -85,8 +85,8 @@ class Scheduler:
                     if sync:
                         await meili.handle_event(event, sync)
                         async with lock:
-                            stats.setdefault(tables_map[sync.table], 0)
-                            stats[tables_map[sync.table]] += 1
+                            stats.setdefault(tables_map[sync.table], {}).setdefault(event.type, 0)
+                            stats[tables_map[sync.table]][event.type] += 1
                 await progress.set(**event.progress)
 
         async def save_stats():
@@ -94,8 +94,9 @@ class Scheduler:
                 await asyncio.sleep(60)
                 async with lock:
                     objs = []
-                    for sync_id, count in stats.items():
-                        objs.append(SyncLog(sync_id=sync_id, count=count))
+                    for sync_id, events in stats.items():
+                        for event_type, count in events.items():
+                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
                     if objs:
                         await SyncLog.bulk_create(objs)
                         stats.clear()
