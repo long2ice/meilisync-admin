@@ -3,12 +3,12 @@ import functools
 from typing import Any, Dict
 
 from loguru import logger
-from meilisync.discover import get_progress, get_source
+from meilisync.discover import get_progress
 from meilisync.enums import EventType, ProgressType
-from meilisync.meili import Meili
 from meilisync.schemas import Event
 from meilisync.settings import Sync as SyncSettings
 
+from meilisync_admin.meili import meili
 from meilisync_admin.models import Source, Sync, SyncLog
 from meilisync_admin.settings import settings
 
@@ -29,14 +29,9 @@ class Scheduler:
         progress_cls = get_progress(ProgressType.redis)
         syncs = await Sync.filter(enabled=True, source=source).all()
         progress = progress_cls(dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}")
-        source_cls = get_source(source.type)
         current_progress = await progress.get()
         tables_map = {sync.table: sync.pk for sync in syncs}
-        source_obj = source_cls(
-            progress=current_progress,
-            tables=list(tables_map.keys()),
-            **source.connection,
-        )
+        source_obj = source.get_source(current_progress, list(tables_map.keys()))
         sync_settings = [
             SyncSettings(
                 table=sync.table,
@@ -47,11 +42,6 @@ class Scheduler:
             )
             for sync in syncs
         ]
-        meili = Meili(
-            debug=settings.DEBUG,
-            api_url=settings.MEILI_API_URL,
-            api_key=settings.MEILI_API_KEY,
-        )
         if not current_progress:
             for sync in sync_settings:
                 if sync.full:

@@ -7,11 +7,9 @@ from pydantic import BaseModel
 from starlette.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
-    HTTP_409_CONFLICT,
     HTTP_412_PRECONDITION_FAILED,
 )
 from tortoise.contrib.pydantic import pydantic_queryset_creator
-from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Source
 
@@ -32,7 +30,7 @@ async def check_source(body: CheckBody):
         raise HTTPException(status_code=HTTP_412_PRECONDITION_FAILED, detail=str(e))
 
 
-@router.get("", response_model=pydantic_queryset_creator(Source))
+@router.get("", response_model=pydantic_queryset_creator(Source), summary="获取数据源列表")
 async def get_list(
     limit: int = 10,
     offset: int = 0,
@@ -44,14 +42,17 @@ class CreateBody(CheckBody):
     label: str
 
 
-@router.post("", status_code=HTTP_201_CREATED, dependencies=[Depends(check_source)])
+@router.post(
+    "",
+    status_code=HTTP_201_CREATED,
+    dependencies=[Depends(check_source)],
+    summary="创建数据源",
+    description="会检查数据源是否可用，如果不可用则返回`412`",
+)
 async def create(
     body: CreateBody,
 ):
-    try:
-        await Source.create(**body.dict())
-    except IntegrityError:
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Source already exists")
+    await Source.create(**body.dict())
 
 
 class UpdateBody(BaseModel):
@@ -60,7 +61,13 @@ class UpdateBody(BaseModel):
     connection: Optional[Dict]
 
 
-@router.patch("/{pk}", status_code=HTTP_204_NO_CONTENT)
+@router.patch(
+    "/{pk}",
+    status_code=HTTP_204_NO_CONTENT,
+    summary="更新数据源",
+    description="会检查数据源是否可用，如果不可用则返回`412`",
+    dependencies=[Depends(check_source)],
+)
 async def update(
     pk: int,
     body: UpdateBody,
@@ -74,7 +81,7 @@ async def update(
     await source.update_from_dict(body.dict(exclude_none=True)).save()
 
 
-@router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT)
+@router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT, summary="删除数据源")
 async def delete(pk: int):
     source = await Source.get(pk=pk)
     await source.delete()

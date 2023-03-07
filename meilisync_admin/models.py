@@ -1,3 +1,6 @@
+from typing import Any, Dict, List, Optional
+
+from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
 from tortoise import Model, fields
 
@@ -14,6 +17,17 @@ class Source(BaseModel):
     label = fields.CharField(max_length=255)
     type = fields.CharEnumField(enum_type=SourceType)
     connection = fields.JSONField()
+
+    def get_source(
+        self, progress: Optional[Dict[str, Any]] = None, tables: Optional[List[str]] = None
+    ):
+        source_cls = get_source(self.type)
+        source_obj = source_cls(
+            progress=progress,
+            tables=tables,
+            **self.connection,
+        )
+        return source_obj
 
 
 class Sync(BaseModel):
