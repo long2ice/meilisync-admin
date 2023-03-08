@@ -28,7 +28,9 @@ class Scheduler:
         lock = asyncio.Lock()
         progress_cls = get_progress(ProgressType.redis)
         syncs = await Sync.filter(enabled=True, source=source).all()
-        progress = progress_cls(dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}")
+        progress = progress_cls(
+            dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}"
+        )
         current_progress = await progress.get()
         tables_map = {sync.table: sync.pk for sync in syncs}
         source_obj = source.get_source(current_progress, list(tables_map.keys()))
@@ -75,7 +77,9 @@ class Scheduler:
                     if sync:
                         await meili.handle_event(event, sync)
                         async with lock:
-                            stats.setdefault(tables_map[sync.table], {}).setdefault(event.type, 0)
+                            stats.setdefault(tables_map[sync.table], {}).setdefault(
+                                event.type, 0
+                            )
                             stats[tables_map[sync.table]][event.type] += 1
                 await progress.set(**event.progress)
 
@@ -86,8 +90,11 @@ class Scheduler:
                     objs = []
                     for sync_id, events in stats.items():
                         for event_type, count in events.items():
-                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
+                            objs.append(
+                                SyncLog(sync_id=sync_id, count=count, type=event_type)
+                            )
                     if objs:
+                        logger.info(f"Save {len(objs)} sync logs, {stats}")
                         await SyncLog.bulk_create(objs)
                         stats.clear()
 
