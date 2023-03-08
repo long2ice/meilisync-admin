@@ -28,11 +28,10 @@ class Scheduler:
         lock = asyncio.Lock()
         progress_cls = get_progress(ProgressType.redis)
         syncs = await Sync.filter(enabled=True, source=source).all()
-        progress = progress_cls(
-            dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}"
-        )
+        progress = progress_cls(dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}")
         current_progress = await progress.get()
         tables_map = {sync.table: sync.pk for sync in syncs}
+        tables_map_reverse = {sync.pk: sync.table for sync in syncs}
         source_obj = source.get_source(current_progress, list(tables_map.keys()))
         sync_settings = [
             SyncSettings(
@@ -77,9 +76,7 @@ class Scheduler:
                     if sync:
                         await meili.handle_event(event, sync)
                         async with lock:
-                            stats.setdefault(tables_map[sync.table], {}).setdefault(
-                                event.type, 0
-                            )
+                            stats.setdefault(tables_map[sync.table], {}).setdefault(event.type, 0)
                             stats[tables_map[sync.table]][event.type] += 1
                 await progress.set(**event.progress)
 
@@ -88,13 +85,20 @@ class Scheduler:
                 await asyncio.sleep(60)
                 async with lock:
                     objs = []
+                    total = 0
                     for sync_id, events in stats.items():
                         for event_type, count in events.items():
-                            objs.append(
-                                SyncLog(sync_id=sync_id, count=count, type=event_type)
-                            )
+                            total += count
+                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
                     if objs:
-                        logger.info(f"Save {len(objs)} sync logs, {stats}")
+                        stats_str = ", ".join(
+                            f"{', '.join(f'{event_type.name}: {count}' for event_type, count in events.items())}"  # noqa
+                            for sync_id, events in stats.items()
+                        )
+                        logger.info(
+                            f'Save {total} sync logs for table "{source.label}'
+                            f'.{tables_map_reverse[sync_id]}", {stats_str}'
+                        )
                         await SyncLog.bulk_create(objs)
                         stats.clear()
 

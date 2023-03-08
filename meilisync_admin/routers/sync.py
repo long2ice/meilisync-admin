@@ -32,9 +32,7 @@ class CreateBody(BaseModel):
     fields: Optional[Json]
 
 
-@router.post(
-    "", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`"
-)
+@router.post("", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`")
 async def create(
     body: CreateBody,
 ):
