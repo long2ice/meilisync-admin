@@ -1,6 +1,6 @@
 from tortoise.signals import post_delete, post_save
 
-from meilisync_admin.models import Source, Sync
+from meilisync_admin.models import Meilisearch, Source, Sync
 from meilisync_admin.scheduler import Scheduler
 
 
@@ -26,3 +26,25 @@ async def post_save_sync(
 @post_delete(Sync)
 async def post_delete_sync(sender: Sync, instance: Sync, using_db: bool):
     await Scheduler.restart_source(await instance.source)
+
+
+@post_save(Meilisearch)
+async def post_save_meili(
+    sender: Meilisearch,
+    instance: Meilisearch,
+    created: bool,
+    using_db: bool,
+    update_fields: list,
+):
+    if created:
+        return
+    syncs = await Sync.filter(meilisearch=instance).all().select_related("source")
+    for sync in syncs:
+        await Scheduler.restart_source(sync.source)
+
+
+@post_delete(Meilisearch)
+async def post_delete_meili(sender: Meilisearch, instance: Meilisearch, using_db: bool):
+    syncs = await Sync.filter(meilisearch=instance).all().select_related("source")
+    for sync in syncs:
+        await Scheduler.restart_source(sync.source)

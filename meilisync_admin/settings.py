@@ -11,11 +11,7 @@ class Settings(BaseSettings):
     REDIS_URL: str
     API_SECRET: str
     ENV = "production"
-    MEILI_API_KEY: Optional[str]
-    MEILI_API_URL: str
     SENTRY_DSN: Optional[str]
-    INSERT_SIZE: Optional[int]
-    INSERT_INTERVAL: Optional[int]
 
     class Config:
         env_file = ".env"

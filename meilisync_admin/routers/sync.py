@@ -7,7 +7,6 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CON
 from tortoise.contrib.pydantic import pydantic_queryset_creator
 from tortoise.exceptions import IntegrityError
 
-from meilisync_admin.meili import meili
 from meilisync_admin.models import Sync, SyncLog
 
 router = APIRouter()
@@ -65,6 +64,7 @@ async def refresh(
         qs = qs.filter(pk__in=body.pks)
     ret = []
     for sync in await qs:
+        meili = sync.get_meili()
         source_obj = sync.source.get_source()
         await meili.delete_all_data(sync.index)
         data = await source_obj.get_full_data(sync)
@@ -101,7 +101,7 @@ async def check(
     for sync in await qs:
         source_obj = sync.source.get_source()
         count = await source_obj.get_count(sync)
-        meili_count = await meili.get_count(sync.index)
+        meili_count = await sync.get_meili().get_count(sync.index)
         ret.append(
             CheckResult(
                 sync_id=sync.pk,

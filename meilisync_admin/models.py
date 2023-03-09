@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
+from meilisync.meili import Meili
 from tortoise import Model, fields
 
 
@@ -19,7 +20,9 @@ class Source(BaseModel):
     connection = fields.JSONField()
 
     def get_source(
-        self, progress: Optional[Dict[str, Any]] = None, tables: Optional[List[str]] = None
+        self,
+        progress: Optional[Dict[str, Any]] = None,
+        tables: Optional[List[str]] = None,
     ):
         source_cls = get_source(self.type)
         source_obj = source_cls(
@@ -38,10 +41,24 @@ class Sync(BaseModel):
     index = fields.CharField(max_length=255)
     primary_key = fields.CharField(max_length=255, default="id")
     enabled = fields.BooleanField(default=True)
+    meilisearch: fields.ForeignKeyRelation["Meilisearch"] = fields.ForeignKeyField(
+        "models.Meilisearch"
+    )
     fields = fields.JSONField(null=True)
 
     class Meta:
-        unique_together = [("source", "table")]
+        unique_together = [("meilisearch", "source", "table")]
+
+    def get_meili(self):
+        return Meili(self.meilisearch.api_url, self.meilisearch.api_key)
+
+
+class Meilisearch(BaseModel):
+    label = fields.CharField(max_length=255)
+    api_url = fields.CharField(max_length=255, unique=True)
+    api_key = fields.CharField(max_length=255)
+    insert_size = fields.IntField(null=True)
+    insert_interval = fields.IntField(null=True)
 
 
 class SyncLog(BaseModel):
