@@ -5,6 +5,7 @@ from typing import Any, Dict
 from loguru import logger
 from meilisync.discover import get_progress
 from meilisync.enums import EventType, ProgressType
+from meilisync.event import EventCollection
 from meilisync.schemas import Event
 from meilisync.settings import Sync as SyncSettings
 
@@ -29,6 +30,7 @@ class Scheduler:
         progress_cls = get_progress(ProgressType.redis)
         syncs = await Sync.filter(enabled=True, source=source).all()
         progress = progress_cls(dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}")
+        collection = EventCollection()
         current_progress = await progress.get()
         tables_map = {sync.table: sync.pk for sync in syncs}
         tables_map_reverse = {sync.pk: sync.table for sync in syncs}
@@ -59,6 +61,21 @@ class Scheduler:
                             f"done! No data found."
                         )
 
+        async def interval():
+            if not settings.INSERT_INTERVAL:
+                return
+            while True:
+                await asyncio.sleep(settings.INSERT_INTERVAL)
+                try:
+                    async with lock:
+                        await meili.handle_events(collection)
+                        await progress.set(**current_progress)
+                except Exception as e:
+                    logger.exception(e)
+                    logger.error(f"Error when insert data to MeiliSearch: {e}")
+
+        asyncio.ensure_future(interval())
+
         @functools.lru_cache()
         def get_sync(table):
             for sync in sync_settings:
@@ -68,17 +85,27 @@ class Scheduler:
         async def sync_data():
             logger.info(
                 f'Start increment sync data from "{source.label}" to'
-                f" MeiliSearch, tables: {list(tables_map.keys())}..."
+                f" MeiliSearch, tables: {', '.join(tables_map.keys())}..."
             )
             async for event in source_obj:
+                if settings.DEBUG:
+                    logger.debug(event)
                 if isinstance(event, Event):
                     sync = get_sync(event.table)
-                    if sync:
+                    if not sync:
+                        continue
+                    if not settings.INSERT_INTERVAL and not settings.INSERT_SIZE:
                         await meili.handle_event(event, sync)
                         async with lock:
                             stats.setdefault(tables_map[sync.table], {}).setdefault(event.type, 0)
                             stats[tables_map[sync.table]][event.type] += 1
-                await progress.set(**event.progress)
+                        await progress.set(**event.progress)
+                    else:
+                        collection.add_event(sync, event)
+                        if collection.size >= settings.INSERT_SIZE:
+                            async with lock:
+                                await meili.handle_events(collection)
+                                await progress.set(**current_progress)
 
         async def save_stats():
             while True:
