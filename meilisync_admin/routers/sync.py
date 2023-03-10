@@ -31,7 +31,9 @@ class CreateBody(BaseModel):
     fields: Optional[Json]
 
 
-@router.post("", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`")
+@router.post(
+    "", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`"
+)
 async def create(
     body: CreateBody,
 ):
@@ -59,7 +61,7 @@ class RefreshResult(BaseModel):
 async def refresh(
     body: Optional[SyncRequest] = None,
 ):
-    qs = Sync.all().select_related("source")
+    qs = Sync.all().select_related("source", "meilisearch")
     if body and body.pks:
         qs = qs.filter(pk__in=body.pks)
     ret = []
@@ -94,7 +96,7 @@ class CheckResult(BaseModel):
 async def check(
     body: Optional[SyncRequest] = None,
 ):
-    qs = Sync.all().select_related("source")
+    qs = Sync.all().select_related("source", "meilisearch")
     if body and body.pks:
         qs = qs.filter(pk__in=body.pks)
     ret = []
