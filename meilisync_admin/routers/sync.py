@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, Json
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
-from tortoise.contrib.pydantic import pydantic_queryset_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Sync, SyncLog
@@ -12,17 +12,31 @@ from meilisync_admin.models import Sync, SyncLog
 router = APIRouter()
 
 
-@router.get("", response_model=pydantic_queryset_creator(Sync), summary="获取同步列表")
+class SyncItem(pydantic_model_creator(Sync)):  # type: ignore
+    meilisearch_id: int
+    source_id: int
+
+
+class ListResponse(BaseModel):
+    total: int
+    data: List[SyncItem]
+
+
+@router.get("", response_model=ListResponse, summary="获取同步列表")
 async def get_list(
     limit: int = 10,
     offset: int = 0,
 ):
-    return await Sync.all().limit(limit).offset(offset).order_by("-id")
+    total = await Sync.all().count()
+    data = await Sync.all().limit(limit).offset(offset).order_by("-id").values()
+    print(data)
+    return ListResponse(total=total, data=data)
 
 
 class CreateBody(BaseModel):
     label: str
     source_id: int
+    meilisearch_id: int
     full_sync: bool = True
     table: str
     index: str
@@ -31,9 +45,7 @@ class CreateBody(BaseModel):
     fields: Optional[Json]
 
 
-@router.post(
-    "", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`"
-)
+@router.post("", status_code=HTTP_201_CREATED, summary="创建同步", description="如果同步记录已存在则返回`409`")
 async def create(
     body: CreateBody,
 ):
@@ -128,6 +140,7 @@ class UpdateBody(BaseModel):
     primary_key: Optional[str]
     enabled: Optional[bool]
     fields: Optional[Json]
+    meilisearch_id: Optional[int]
 
 
 @router.patch(

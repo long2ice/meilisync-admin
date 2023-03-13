@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
-from tortoise.contrib.pydantic import pydantic_queryset_creator
+from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Meilisearch
@@ -11,12 +11,19 @@ from meilisync_admin.models import Meilisearch
 router = APIRouter()
 
 
-@router.get("", response_model=pydantic_queryset_creator(Meilisearch), summary="获取meilisearch列表")
+class ListResponse(BaseModel):
+    total: int
+    data: List[pydantic_model_creator(Meilisearch)]  # type: ignore
+
+
+@router.get("", response_model=ListResponse, summary="获取meilisearch列表")
 async def get_list(
     limit: int = 10,
     offset: int = 0,
 ):
-    return await Meilisearch.all().limit(limit).offset(offset).order_by("-id")
+    total = await Meilisearch.all().count()
+    data = await Meilisearch.all().limit(limit).offset(offset).order_by("-id")
+    return ListResponse(total=total, data=data)
 
 
 class CreateBody(BaseModel):

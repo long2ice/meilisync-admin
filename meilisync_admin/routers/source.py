@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from meilisync.discover import get_source
@@ -9,7 +9,7 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_412_PRECONDITION_FAILED,
 )
-from tortoise.contrib.pydantic import pydantic_queryset_creator
+from tortoise.contrib.pydantic import pydantic_model_creator
 
 from meilisync_admin.models import Source
 
@@ -30,12 +30,19 @@ async def check_source(body: CheckBody):
         raise HTTPException(status_code=HTTP_412_PRECONDITION_FAILED, detail=str(e))
 
 
-@router.get("", response_model=pydantic_queryset_creator(Source), summary="获取数据源列表")
+class ListResponse(BaseModel):
+    total: int
+    data: List[pydantic_model_creator(Source)]  # type: ignore
+
+
+@router.get("", response_model=ListResponse, summary="获取数据源列表")
 async def get_list(
     limit: int = 10,
     offset: int = 0,
 ):
-    return await Source.all().limit(limit).offset(offset).order_by("-id")
+    total = await Source.all().count()
+    data = await Source.all().limit(limit).offset(offset).order_by("-id")
+    return ListResponse(total=total, data=data)
 
 
 class CreateBody(CheckBody):
