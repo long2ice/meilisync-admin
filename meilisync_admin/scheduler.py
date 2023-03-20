@@ -50,7 +50,7 @@ class Scheduler:
             tables_sync_settings_map[sync.table] = sync_setting
             tables_sync_map[sync.table] = sync
             collections_map[sync_setting] = EventCollection()
-            meili_map[sync_setting] = sync.get_meili()
+            meili_map[sync_setting] = sync.meili_client
             sync_settings.append(
                 sync_setting,
             )

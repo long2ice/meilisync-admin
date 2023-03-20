@@ -49,7 +49,8 @@ class Sync(BaseModel):
     class Meta:
         unique_together = [("meilisearch", "source", "table")]
 
-    def get_meili(self):
+    @property
+    def meili_client(self):
         return Meili(self.meilisearch.api_url, self.meilisearch.api_key)
 
 

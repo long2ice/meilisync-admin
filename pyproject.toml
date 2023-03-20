@@ -19,9 +19,6 @@ meilisync = { git = 'https://github.com/meilisync/meilisync.git',extras= ["all"]
 tortoise-orm = "*"
 aerich = "*"
 fastapi = {version= "*",extras= ["all"]}
-sentry-sdk = "*"
-redis = "*"
-asyncmy = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -35,6 +32,7 @@ pytest-custom-exit-code = "*"
 tortoise_orm = "meilisync_admin.settings.TORTOISE_ORM"
 location = "./migrations"
 src_folder = "./."
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -44,7 +42,7 @@ profile = "black"
 
 [tool.black]
 line-length = 100
-target-version = ['py36', 'py37', 'py38', 'py39']
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'
@@ -52,6 +50,7 @@ asyncio_mode = 'auto'
 [tool.mypy]
 ignore_missing_imports = true
 pretty = true
+plugins = ["pydantic.mypy"]
 
 [tool.ruff]
 line-length = 100

@@ -78,12 +78,10 @@ async def refresh(
         qs = qs.filter(pk__in=body.pks)
     ret = []
     for sync in await qs:
-        meili = sync.get_meili()
         source_obj = sync.source.get_source()
-        await meili.delete_all_data(sync.index)
         data = await source_obj.get_full_data(sync)
         if data:
-            await meili.add_full_data(sync.index, sync.primary_key, data)
+            await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
         ret.append(
             RefreshResult(
                 sync_id=sync.pk,
@@ -115,7 +113,7 @@ async def check(
     for sync in await qs:
         source_obj = sync.source.get_source()
         count = await source_obj.get_count(sync)
-        meili_count = await sync.get_meili().get_count(sync.index)
+        meili_count = await sync.meili_client.get_count(sync.index)
         ret.append(
             CheckResult(
                 sync_id=sync.pk,
