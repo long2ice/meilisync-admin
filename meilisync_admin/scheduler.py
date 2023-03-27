@@ -16,6 +16,7 @@ from meilisync_admin.settings import settings
 
 class Scheduler:
     _tasks: Dict[int, Task] = {}
+    _save_task: Task = None
 
     @classmethod
     async def startup(cls):
@@ -37,7 +38,11 @@ class Scheduler:
         tables_map_reverse = {}
         meili_map: Dict[Sync, Meili] = {}
         sync_settings = []
-        syncs = await Sync.filter(enabled=True, source=source).all().select_related("meilisearch")
+        syncs = (
+            await Sync.filter(enabled=True, source=source)
+            .all()
+            .select_related("meilisearch")
+        )
         for sync in syncs:
             tables_map_reverse[sync.pk] = sync.table
             sync_setting = SyncSettings(
@@ -54,7 +59,9 @@ class Scheduler:
             sync_settings.append(
                 sync_setting,
             )
-        source_obj = source.get_source(current_progress, list(tables_sync_settings_map.keys()))
+        source_obj = source.get_source(
+            current_progress, list(tables_sync_settings_map.keys())
+        )
         if not current_progress:
             for ss in sync_settings:
                 meili = meili_map[ss]
@@ -89,7 +96,9 @@ class Scheduler:
                 insert_interval = meilisync.insert_interval
                 if not insert_interval:
                     continue
-                asyncio.ensure_future(_(meili_map[s], collections_map[s], insert_interval))
+                asyncio.ensure_future(
+                    _(meili_map[s], collections_map[s], insert_interval)
+                )
 
         asyncio.ensure_future(start_interval())
 
@@ -132,9 +141,12 @@ class Scheduler:
                         total = 0
                         for event_type, count in events.items():
                             total += count
-                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
+                            objs.append(
+                                SyncLog(sync_id=sync_id, count=count, type=event_type)
+                            )
                         stats_str = ", ".join(
-                            f"{event_type.name}: {count}" for event_type, count in events.items()
+                            f"{event_type.name}: {count}"
+                            for event_type, count in events.items()
                         )
                         logger.info(
                             f'Save {total} sync logs for table "{source.label}'
@@ -146,10 +158,11 @@ class Scheduler:
                     stats.clear()
 
         cls._tasks[source.pk] = asyncio.ensure_future(sync_data())
-        asyncio.ensure_future(save_stats())
+        cls._save_task = asyncio.ensure_future(save_stats())
 
     @classmethod
     def shutdown(cls):
+        cls._save_task.cancel()
         for task in cls._tasks.values():
             task.cancel()
 
