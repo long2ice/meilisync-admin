@@ -65,16 +65,10 @@ class SyncRequest(BaseModel):
     pks: Optional[List[int]] = Body(None, description="同步ID列表")
 
 
-class RefreshResult(BaseModel):
-    sync_id: int
-    count: int
-
-
 @router.post(
     "/refresh",
     summary="刷新同步",
     description="删除所有MeiliSearch中的数据，重新同步所有数据",
-    response_model=List[RefreshResult],
     status_code=HTTP_204_NO_CONTENT,
 )
 async def refresh(
@@ -85,18 +79,11 @@ async def refresh(
         qs = Sync.all().select_related("source", "meilisearch")
         if body and body.pks:
             qs = qs.filter(pk__in=body.pks)
-        ret = []
         for sync in await qs:
             source_obj = sync.source.get_source()
             data = await source_obj.get_full_data(sync)
             if data:
                 await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
-            ret.append(
-                RefreshResult(
-                    sync_id=sync.pk,
-                    count=len(data),
-                )
-            )
 
     background_tasks.add_task(_)
 
