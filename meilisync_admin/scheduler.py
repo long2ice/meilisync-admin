@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import Dict
+from typing import Dict, Optional
 
 from loguru import logger
 from meilisync.discover import get_progress
@@ -16,7 +16,7 @@ from meilisync_admin.settings import settings
 
 class Scheduler:
     _tasks: Dict[int, Task] = {}
-    _save_task: Task = None
+    _save_task: Optional[Task] = None
 
     @classmethod
     async def startup(cls):
@@ -38,11 +38,7 @@ class Scheduler:
         tables_map_reverse = {}
         meili_map: Dict[Sync, Meili] = {}
         sync_settings = []
-        syncs = (
-            await Sync.filter(enabled=True, source=source)
-            .all()
-            .select_related("meilisearch")
-        )
+        syncs = await Sync.filter(enabled=True, source=source).all().select_related("meilisearch")
         for sync in syncs:
             tables_map_reverse[sync.pk] = sync.table
             sync_setting = SyncSettings(
@@ -59,25 +55,22 @@ class Scheduler:
             sync_settings.append(
                 sync_setting,
             )
-        source_obj = source.get_source(
-            current_progress, list(tables_sync_settings_map.keys())
-        )
-        if not current_progress:
-            for ss in sync_settings:
-                meili = meili_map[ss]
-                if ss.full:
-                    data = await source_obj.get_full_data(ss)
-                    if data:
-                        await meili.add_full_data(ss.index_name, ss.pk, data)
-                        logger.info(
-                            f'Full data sync for table "{source.label}.{ss.table}" '
-                            f"done! {len(data)} documents added."
-                        )
-                    else:
-                        logger.info(
-                            f'Full data sync for table "{source.label}.{ss.table}" '
-                            f"done! No data found."
-                        )
+        source_obj = source.get_source(current_progress, list(tables_sync_settings_map.keys()))
+        for ss in sync_settings:
+            meili = meili_map[ss]
+            if ss.full and not await meili.index_exists(ss.index_name):
+                data = await source_obj.get_full_data(ss)
+                if data:
+                    await meili.add_full_data(ss.index_name, ss.pk, data)
+                    logger.info(
+                        f'Full data sync for table "{source.label}.{ss.table}" '
+                        f"done! {len(data)} documents added."
+                    )
+                else:
+                    logger.info(
+                        f'Full data sync for table "{source.label}.{ss.table}" '
+                        "done! No data found."
+                    )
 
         async def start_interval():
             async def _(m: Meili, c: EventCollection, interval: int):
@@ -96,16 +89,14 @@ class Scheduler:
                 insert_interval = meilisync.insert_interval
                 if not insert_interval:
                     continue
-                asyncio.ensure_future(
-                    _(meili_map[s], collections_map[s], insert_interval)
-                )
+                asyncio.ensure_future(_(meili_map[s], collections_map[s], insert_interval))
 
         asyncio.ensure_future(start_interval())
 
         async def sync_data():
             logger.info(
                 f'Start increment sync data from "{source.label}" to'
-                f" MeiliSearch, tables: {', '.join(tables_sync_settings_map.keys())}..."
+                f' MeiliSearch, tables: {", ".join(tables_sync_settings_map.keys())}...'
             )
             async for event in source_obj:
                 if settings.DEBUG:
@@ -141,12 +132,9 @@ class Scheduler:
                         total = 0
                         for event_type, count in events.items():
                             total += count
-                            objs.append(
-                                SyncLog(sync_id=sync_id, count=count, type=event_type)
-                            )
+                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
                         stats_str = ", ".join(
-                            f"{event_type.name}: {count}"
-                            for event_type, count in events.items()
+                            f"{event_type.name}: {count}" for event_type, count in events.items()
                         )
                         logger.info(
                             f'Save {total} sync logs for table "{source.label}'

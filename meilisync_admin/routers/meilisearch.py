@@ -46,7 +46,9 @@ async def create(
     try:
         await Meilisearch.create(**body.dict())
     except IntegrityError:
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Meilisearch already exists")
+        raise HTTPException(
+            status_code=HTTP_409_CONFLICT, detail="Meilisearch already exists"
+        )
 
 
 @router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT, summary="删除meilisearch")
@@ -77,4 +79,6 @@ async def update(
     try:
         await m.update_from_dict(body.dict(exclude_none=True)).save()
     except IntegrityError:
-        raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Meilisearch already exists")
+        raise HTTPException(
+            status_code=HTTP_409_CONFLICT, detail="Meilisearch already exists"
+        )

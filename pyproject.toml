@@ -15,10 +15,10 @@ repository = "https://github.com/meilisync/meilisync-admin.git"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-meilisync = { git = 'https://github.com/meilisync/meilisync.git',extras= ["all"] }
+meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = ["all"] }
 tortoise-orm = "*"
 aerich = "*"
-fastapi = {version= "*",extras= ["all"]}
+fastapi = { version = "*", extras = ["all"] }
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
@@ -41,8 +41,8 @@ build-backend = "poetry.core.masonry.api"
 profile = "black"
 
 [tool.black]
-line-length = 100
 target-version = ['py37', 'py38', 'py39', 'py310']
+preview = true
 
 [tool.pytest.ini_options]
 asyncio_mode = 'auto'
@@ -51,6 +51,3 @@ asyncio_mode = 'auto'
 ignore_missing_imports = true
 pretty = true
 plugins = ["pydantic.mypy"]
-
-[tool.ruff]
-line-length = 100
