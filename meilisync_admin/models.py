@@ -51,7 +51,11 @@ class Sync(BaseModel):
 
     @property
     def meili_client(self):
-        return Meili(self.meilisearch.api_url, self.meilisearch.api_key)
+        return Meili(
+            self.meilisearch.api_url,
+            self.meilisearch.api_key,
+            wait_for_task_timeout=10 * 60 * 1000,
+        )
 
 
 class Meilisearch(BaseModel):
