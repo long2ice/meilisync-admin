@@ -109,6 +109,8 @@ class Scheduler:
             async for event in source_obj:
                 if settings.DEBUG:
                     logger.debug(event)
+                nonlocal current_progress
+                current_progress = event.progress
                 if not isinstance(event, Event):
                     continue
                 ss_list = tables_sync_settings_map.get(event.table)
@@ -125,13 +127,13 @@ class Scheduler:
                             stats.setdefault(s.pk, {}).setdefault(event.type, 0)
                             stats[s.pk][event.type] += 1
                             await m.handle_event(event, ss_)
-                            await progress.set(**event.progress)
+                            await progress.set(**current_progress)
                         else:
                             collection = collections_map[ss_]
                             collection.add_event(ss_, event)
                             if collection.size >= meilisearch.insert_size:
                                 await m.handle_events(collection)
-                                await progress.set(**event.progress)
+                                await progress.set(**current_progress)
 
         async def save_stats():
             while True:
