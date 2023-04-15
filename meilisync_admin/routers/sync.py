@@ -9,6 +9,7 @@ from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Sync, SyncLog
+from meilisync_admin.scheduler import Scheduler
 
 router = APIRouter()
 
@@ -30,7 +31,6 @@ async def get_list(
 ):
     total = await Sync.all().count()
     data = await Sync.all().limit(limit).offset(offset).order_by("-id").values()
-    print(data)
     return ListResponse(total=total, data=data)
 
 
@@ -80,10 +80,12 @@ async def refresh(
         if body and body.pks:
             qs = qs.filter(pk__in=body.pks)
         for sync in await qs:
+            Scheduler.remove_source(sync.source.pk)
             source_obj = sync.source.get_source()
             data = await source_obj.get_full_data(sync)
             if data:
                 await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
+            await Scheduler.restart_source(sync.source)
 
     background_tasks.add_task(_)
 
