@@ -37,11 +37,7 @@ class Scheduler:
         tables_map_reverse = {}
         meili_map: Dict[Sync, Meili] = {}
         sync_settings = []
-        syncs = (
-            await Sync.filter(enabled=True, source=source)
-            .all()
-            .select_related("meilisearch")
-        )
+        syncs = await Sync.filter(enabled=True, source=source).all().select_related("meilisearch")
         for sync in syncs:
             tables_map_reverse[sync.pk] = sync.table
             sync_setting = SyncSettings(
@@ -51,17 +47,13 @@ class Scheduler:
                 index=sync.index,
                 fields=sync.fields,
             )
-            tables_sync_settings_map.setdefault(sync.table, []).append(
-                (sync_setting, sync)
-            )
+            tables_sync_settings_map.setdefault(sync.table, []).append((sync_setting, sync))
             collections_map[sync_setting] = EventCollection()
             meili_map[sync_setting] = sync.meili_client
             sync_settings.append(
                 sync_setting,
             )
-        source_obj = source.get_source(
-            current_progress, list(tables_sync_settings_map.keys())
-        )
+        source_obj = source.get_source(current_progress, list(tables_sync_settings_map.keys()))
         for ss in sync_settings:
             meili = meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
@@ -95,9 +87,7 @@ class Scheduler:
                 insert_interval = meilisync.insert_interval
                 if not insert_interval:
                     continue
-                asyncio.ensure_future(
-                    _(meili_map[s], collections_map[s], insert_interval)
-                )
+                asyncio.ensure_future(_(meili_map[s], collections_map[s], insert_interval))
 
         asyncio.ensure_future(start_interval())
 
@@ -112,6 +102,7 @@ class Scheduler:
                 nonlocal current_progress
                 current_progress = event.progress
                 if not isinstance(event, Event):
+                    await progress.set(**current_progress)
                     continue
                 ss_list = tables_sync_settings_map.get(event.table)
                 if not ss_list:
@@ -120,10 +111,7 @@ class Scheduler:
                     for ss_, s in ss_list:
                         m = meili_map[ss_]
                         meilisearch = s.meilisearch
-                        if (
-                            not meilisearch.insert_size
-                            and not meilisearch.insert_interval
-                        ):
+                        if not meilisearch.insert_size and not meilisearch.insert_interval:
                             stats.setdefault(s.pk, {}).setdefault(event.type, 0)
                             stats[s.pk][event.type] += 1
                             await m.handle_event(event, ss_)
@@ -144,12 +132,9 @@ class Scheduler:
                         total = 0
                         for event_type, count in events.items():
                             total += count
-                            objs.append(
-                                SyncLog(sync_id=sync_id, count=count, type=event_type)
-                            )
+                            objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
                         stats_str = ", ".join(
-                            f"{event_type.name}: {count}"
-                            for event_type, count in events.items()
+                            f"{event_type.name}: {count}" for event_type, count in events.items()
                         )
                         logger.info(
                             f'Save {total} sync logs for table "{source.label}'
