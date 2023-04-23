@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from loguru import logger
 from meilisync.discover import get_progress
@@ -26,14 +26,14 @@ class Scheduler:
 
     @classmethod
     async def _start_source(cls, source: Source):
-        stats: Dict[str, Dict[EventType, int]] = {}
+        stats: Dict[int, Dict[EventType, int]] = {}
         lock = asyncio.Lock()
         progress = get_progress(ProgressType.redis)(
             dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}"
         )
         current_progress = await progress.get()
         collections_map: Dict[SyncSettings, EventCollection] = {}
-        tables_sync_settings_map: Dict[str, list] = {}
+        tables_sync_settings_map: Dict[str, List[Tuple[SyncSettings, Sync]]] = {}
         tables_map_reverse = {}
         meili_map: Dict[SyncSettings, Tuple[Meili, int]] = {}
         sync_settings = []
@@ -74,7 +74,7 @@ class Scheduler:
                         await m.handle_events(c)
                         await progress.set(**current_progress)
                 except Exception as e:
-                    logger.error(f"Error when insert data to MeiliSearch: {e}")
+                    logger.error(f"Error when insert data to Meilisearch: {e}")
 
         for ss in sync_settings:
             meili, insert_interval = meili_map[ss]
@@ -99,7 +99,7 @@ class Scheduler:
         async def sync_data():
             logger.info(
                 f'Start increment sync data from "{source.label}" to'
-                f' MeiliSearch, tables: {", ".join(tables_sync_settings_map.keys())}...'
+                f' Meilisearch, tables: {", ".join(tables_sync_settings_map.keys())}...'
             )
             async for event in source_obj:
                 if settings.DEBUG:
@@ -113,20 +113,20 @@ class Scheduler:
                 if not ss_list:
                     continue
                 async with lock:
-                    for ss_, s in ss_list:
-                        m, _ = meili_map[ss_]
-                        meilisearch = s.meilisearch
+                    for setting, sync_model in ss_list:
+                        m, _ = meili_map[setting]
+                        meilisearch = sync_model.meilisearch
+                        stats.setdefault(sync_model.pk, {}).setdefault(event.type, 0)
+                        stats[sync_model.pk][event.type] += 1
                         if (
                             not meilisearch.insert_size
                             and not meilisearch.insert_interval
                         ):
-                            stats.setdefault(s.pk, {}).setdefault(event.type, 0)
-                            stats[s.pk][event.type] += 1
-                            await m.handle_event(event, ss_)
+                            await m.handle_event(event, setting)
                             await progress.set(**current_progress)
                         else:
-                            collection = collections_map[ss_]
-                            collection.add_event(ss_, event)
+                            collection = collections_map[setting]
+                            collection.add_event(setting, event)
                             if collection.size >= meilisearch.insert_size:
                                 await m.handle_events(collection)
                                 await progress.set(**current_progress)
