@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Task
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from loguru import logger
 from meilisync.discover import get_progress
@@ -32,10 +32,10 @@ class Scheduler:
             dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}"
         )
         current_progress = await progress.get()
-        collections_map = {}
+        collections_map: Dict[SyncSettings, EventCollection] = {}
         tables_sync_settings_map: Dict[str, list] = {}
         tables_map_reverse = {}
-        meili_map: Dict[Sync, Meili] = {}
+        meili_map: Dict[SyncSettings, Tuple[Meili, int]] = {}
         sync_settings = []
         syncs = (
             await Sync.filter(enabled=True, source=source)
@@ -55,15 +55,29 @@ class Scheduler:
                 (sync_setting, sync)
             )
             collections_map[sync_setting] = EventCollection()
-            meili_map[sync_setting] = sync.meili_client
+            meili_map[sync_setting] = (
+                sync.meili_client,
+                sync.meilisearch.insert_interval,
+            )
             sync_settings.append(
                 sync_setting,
             )
         source_obj = source.get_source(
             current_progress, list(tables_sync_settings_map.keys())
         )
+
+        async def start_interval(m: Meili, c: EventCollection, interval: int):
+            while True:
+                await asyncio.sleep(interval)
+                try:
+                    async with lock:
+                        await m.handle_events(c)
+                        await progress.set(**current_progress)
+                except Exception as e:
+                    logger.error(f"Error when insert data to MeiliSearch: {e}")
+
         for ss in sync_settings:
-            meili = meili_map[ss]
+            meili, insert_interval = meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
                 data = await source_obj.get_full_data(ss)
                 if data:
@@ -77,28 +91,10 @@ class Scheduler:
                         f'Full data sync for table "{source.label}.{ss.table}" '
                         "done! No data found."
                     )
-
-        async def start_interval():
-            async def _(m: Meili, c: EventCollection, interval: int):
-                while True:
-                    await asyncio.sleep(interval)
-                    try:
-                        async with lock:
-                            await m.handle_events(c)
-                            await progress.set(**current_progress)
-                    except Exception as e:
-                        logger.error(f"Error when insert data to MeiliSearch: {e}")
-
-            for s in syncs:
-                meilisync = s.meilisearch
-                insert_interval = meilisync.insert_interval
-                if not insert_interval:
-                    continue
+            if insert_interval:
                 asyncio.ensure_future(
-                    _(meili_map[s], collections_map[s], insert_interval)
+                    start_interval(meili, collections_map[ss], insert_interval)
                 )
-
-        asyncio.ensure_future(start_interval())
 
         async def sync_data():
             logger.info(
@@ -118,7 +114,7 @@ class Scheduler:
                     continue
                 async with lock:
                     for ss_, s in ss_list:
-                        m = meili_map[ss_]
+                        m, _ = meili_map[ss_]
                         meilisearch = s.meilisearch
                         if (
                             not meilisearch.insert_size
