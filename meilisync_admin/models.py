@@ -5,6 +5,8 @@ from meilisync.enums import EventType, SourceType
 from meilisync.meili import Meili
 from tortoise import Model, fields
 
+from meilisync_admin.validators import EmailValidator
+
 
 class BaseModel(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -70,3 +72,20 @@ class SyncLog(BaseModel):
     sync: fields.ForeignKeyRelation[Sync] = fields.ForeignKeyField("models.Sync")
     type = fields.CharEnumField(enum_type=EventType, default=EventType.create)
     count = fields.IntField(default=0)
+
+
+class Admin(BaseModel):
+    nickname = fields.CharField(max_length=255)
+    email = fields.CharField(max_length=255, unique=True, validators=[EmailValidator()])
+    last_login_at = fields.DatetimeField(null=True)
+    password = fields.CharField(max_length=255)
+    is_superuser = fields.BooleanField(default=False)
+    is_active = fields.BooleanField(default=True)
+
+
+class ActionLog(BaseModel):
+    admin: fields.ForeignKeyRelation[Admin] = fields.ForeignKeyField("models.Admin")
+    ip = fields.CharField(max_length=255)
+    content = fields.JSONField()
+    path = fields.CharField(max_length=255)
+    method = fields.CharField(max_length=10)

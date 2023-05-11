@@ -1,15 +1,15 @@
-import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Json
 from starlette.background import BackgroundTasks
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
-from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
+from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Sync, SyncLog
 from meilisync_admin.scheduler import Scheduler
+from meilisync_admin.schema.request import Query
 
 router = APIRouter()
 
@@ -26,11 +26,23 @@ class ListResponse(BaseModel):
 
 @router.get("", response_model=ListResponse, summary="获取同步列表")
 async def get_list(
-    limit: int = 10,
-    offset: int = 0,
+    query: Query = Depends(Query),
+    source_id: int | None = None,
+    meilisearch_id: int | None = None,
+    enabled: bool | None = None,
+    label: str | None = None,
 ):
-    total = await Sync.all().count()
-    data = await Sync.all().limit(limit).offset(offset).order_by("-id").values()
+    qs = Sync.all()
+    if source_id:
+        qs = qs.filter(source_id=source_id)
+    if meilisearch_id:
+        qs = qs.filter(meilisearch_id=meilisearch_id)
+    if enabled is not None:
+        qs = qs.filter(enabled=enabled)
+    if label:
+        qs = qs.filter(label__icontains=label)
+    total = await qs.count()
+    data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     return ListResponse(total=total, data=data)
 
 
@@ -123,10 +135,11 @@ async def check(
     return ret
 
 
-@router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT, summary="删除同步")
-async def delete(pk: int):
-    sync = await Sync.get(pk=pk)
-    await sync.delete()
+@router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步")
+async def delete(pks: str):
+    for pk in pks.split(","):
+        sync = await Sync.get(pk=pk)
+        await sync.delete()
 
 
 class UpdateBody(BaseModel):
@@ -157,23 +170,41 @@ async def update(
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 
 
+class SyncLogResponse(pydantic_model_creator(SyncLog)):  # type: ignore
+    sync_id: int
+
+
+class LogsResponse(BaseModel):
+    total: int
+    data: list[SyncLogResponse]
+
+
 @router.get(
     "/logs",
-    response_model=pydantic_queryset_creator(SyncLog),
+    response_model=LogsResponse,
     summary="获取同步日志",
     description="每分钟记录一次，包括同步数量和类型",
 )
 async def logs(
-    start: datetime.datetime,
-    end: datetime.datetime,
     sync_id: Optional[int] = None,
     source_id: Optional[int] = None,
+    meilisearch_id: Optional[int] = None,
+    query: Query = Depends(Query),
 ):
-    qs = SyncLog.filter(
-        created_at__range=(start, end),
-    )
+    qs = SyncLog.all()
     if sync_id:
         qs = qs.filter(sync_id=sync_id)
     if source_id:
         qs = qs.filter(sync__source_id=source_id)
-    return await qs.all()
+    if meilisearch_id:
+        qs = qs.filter(sync__meilisearch_id=meilisearch_id)
+    qs = qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
+    total = await qs.count()
+    data = await qs
+    return LogsResponse(total=total, data=data)
+
+
+@router.delete("/logs/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步记录")
+async def delete_sync_logs(pks: str):
+    pk_list = pks.split(",")
+    await SyncLog.filter(pk__in=pk_list).delete()

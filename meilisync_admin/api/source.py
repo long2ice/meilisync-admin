@@ -12,6 +12,7 @@ from starlette.status import (
 from tortoise.contrib.pydantic import pydantic_model_creator
 
 from meilisync_admin.models import Source
+from meilisync_admin.schema.request import Query
 
 router = APIRouter()
 
@@ -37,11 +38,17 @@ class ListResponse(BaseModel):
 
 @router.get("", response_model=ListResponse, summary="获取数据源列表")
 async def get_list(
-    limit: int = 10,
-    offset: int = 0,
+    query: Query = Depends(Query),
+    label: str | None = None,
+    type: SourceType | None = None,
 ):
-    total = await Source.all().count()
-    data = await Source.all().limit(limit).offset(offset).order_by("-id")
+    qs = Source.all()
+    if label:
+        qs = qs.filter(label__icontains=label)
+    if type:
+        qs = qs.filter(type=type)
+    total = await qs.count()
+    data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     return ListResponse(total=total, data=data)
 
 
@@ -88,7 +95,8 @@ async def update(
     await source.update_from_dict(body.dict(exclude_none=True)).save()
 
 
-@router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT, summary="删除数据源")
-async def delete(pk: int):
-    source = await Source.get(pk=pk)
-    await source.delete()
+@router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除数据源")
+async def delete(pks: str):
+    for pk in pks.split(","):
+        source = await Source.get(pk=pk)
+        await source.delete()

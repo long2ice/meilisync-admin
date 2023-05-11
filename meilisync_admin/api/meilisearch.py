@@ -1,12 +1,13 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Meilisearch
+from meilisync_admin.schema.request import Query
 
 router = APIRouter()
 
@@ -18,11 +19,14 @@ class ListResponse(BaseModel):
 
 @router.get("", response_model=ListResponse, summary="获取meilisearch列表")
 async def get_list(
-    limit: int = 10,
-    offset: int = 0,
+    query: Query = Depends(Query),
+    label: str | None = None,
 ):
-    total = await Meilisearch.all().count()
-    data = await Meilisearch.all().limit(limit).offset(offset).order_by("-id")
+    qs = Meilisearch.all()
+    if label:
+        qs = qs.filter(label__icontains=label)
+    total = await qs.count()
+    data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     return ListResponse(total=total, data=data)
 
 
@@ -51,10 +55,11 @@ async def create(
         )
 
 
-@router.delete("/{pk}", status_code=HTTP_204_NO_CONTENT, summary="删除meilisearch")
-async def delete(pk: int):
-    m = await Meilisearch.get(pk=pk)
-    await m.delete()
+@router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除meilisearch")
+async def delete(pks: str):
+    for pk in pks.split(","):
+        m = await Meilisearch.get(pk=pk)
+        await m.delete()
 
 
 class UpdateBody(BaseModel):

@@ -9,9 +9,24 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     DB_URL: str
     REDIS_URL: str
-    API_SECRET: str
     ENV = "production"
     SENTRY_DSN: Optional[str]
+    SECRET_KEY: str
+    LICENSE: str
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    GOOGLE_CLIENT_ID: str | None
+    GOOGLE_CLIENT_SECRET: str | None
+    GITHUB_CLIENT_ID: str | None
+    GITHUB_CLIENT_SECRET: str | None
+
+    @property
+    def enable_github_oauth(self):
+        return self.GITHUB_CLIENT_ID and self.GITHUB_CLIENT_SECRET
+
+    @property
+    def enable_google_oauth(self):
+        return self.GOOGLE_CLIENT_ID and self.GOOGLE_CLIENT_SECRET
 
     class Config:
         env_file = ".env"
