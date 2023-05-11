@@ -21,5 +21,5 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /meilisync_admin /meilisync_admin
 COPY --from=frontend-builder /meilisync-web/dist /meilisync_admin/static
-RUN pyconcrete-admin.py compile --source=. --pye && find . -name '*.py' -delete
+RUN pyconcrete-admin.py compile --source=meilisync_admin --pye && find meilisync_admin -name '*.py' -delete
 CMD ["pyconcrete", "meilisync_admin/app.pye"]
