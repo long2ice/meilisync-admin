@@ -14,7 +14,7 @@ from meilisync_admin.exceptions import (
     validation_exception_handler,
 )
 from meilisync_admin.license import load_license
-from meilisync_admin.logging import init_logging
+from meilisync_admin.log import init_logging
 from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.settings import TORTOISE_ORM, settings
 from meilisync_admin.static import SPAStaticFiles
