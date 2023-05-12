@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter
 from tortoise.expressions import RawSQL
 from tortoise.functions import Count
@@ -8,14 +10,21 @@ router = APIRouter()
 
 
 @router.get("")
-async def get_stats():
+async def get_stats(
+    start_date: datetime.date,
+    end_date: datetime.date,
+):
     source_count = await Source.all().count()
     sync_count = await Sync.all().count()
     sync_log_count = await SyncLog.all().count()
     admin_count = await Admin.filter(is_active=True).count()
     action_log_count = await ActionLog.all().count()
     sync_logs = (
-        await SyncLog.annotate(count=Count("id"), date=RawSQL("date(created_at)"))
+        await SyncLog.filter(
+            created_at__gte=start_date,
+            created_at__lte=end_date + datetime.timedelta(days=1),
+        )
+        .annotate(count=Count("id"), date=RawSQL("date(created_at)"))
         .group_by("type", "date")
         .values("type", "count", "date")
     )
