@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
+from meilisync.enums import EventType
 from pydantic import BaseModel, Json
 from starlette.background import BackgroundTasks
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
@@ -115,11 +116,11 @@ class CheckResult(BaseModel):
     response_model=List[CheckResult],
 )
 async def check(
-    body: Optional[SyncRequest] = None,
+    pks: str | None = None,
 ):
     qs = Sync.all().select_related("source", "meilisearch")
-    if body and body.pks:
-        qs = qs.filter(pk__in=body.pks)
+    if pks:
+        qs = qs.filter(pk__in=pks.split(","))
     ret = []
     for sync in await qs:
         source_obj = sync.source.get_source()
@@ -186,10 +187,11 @@ class LogsResponse(BaseModel):
     description="每分钟记录一次，包括同步数量和类型",
 )
 async def logs(
-    sync_id: Optional[int] = None,
-    source_id: Optional[int] = None,
-    meilisearch_id: Optional[int] = None,
+    sync_id: int | None = None,
+    source_id: int | None = None,
+    meilisearch_id: int | None = None,
     query: Query = Depends(Query),
+    type: EventType | None = None,
 ):
     qs = SyncLog.all()
     if sync_id:
@@ -198,6 +200,8 @@ async def logs(
         qs = qs.filter(sync__source_id=source_id)
     if meilisearch_id:
         qs = qs.filter(sync__meilisearch_id=meilisearch_id)
+    if type:
+        qs = qs.filter(type=type)
     qs = qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     total = await qs.count()
     data = await qs
