@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from meilisync.enums import EventType
 from pydantic import BaseModel, Json
 from starlette.background import BackgroundTasks
@@ -74,31 +74,24 @@ async def create(
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 
 
-class SyncRequest(BaseModel):
-    pks: Optional[List[int]] = Body(None, description="同步ID列表")
-
-
 @router.post(
-    "/refresh",
+    "/{pk}/refresh",
     summary="刷新同步",
     description="删除所有MeiliSearch中的数据，重新同步所有数据",
     status_code=HTTP_204_NO_CONTENT,
 )
 async def refresh(
     background_tasks: BackgroundTasks,
-    body: Optional[SyncRequest] = None,
+    pk: int,
 ):
     async def _():
-        qs = Sync.all().select_related("source", "meilisearch")
-        if body and body.pks:
-            qs = qs.filter(pk__in=body.pks)
-        for sync in await qs:
-            Scheduler.remove_source(sync.source.pk)
-            source_obj = sync.source.get_source()
-            data = await source_obj.get_full_data(sync)
-            if data:
-                await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
-            await Scheduler.restart_source(sync.source)
+        sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
+        source_obj = sync.source.get_source()
+        Scheduler.remove_source(sync.source.pk)
+        data = await source_obj.get_full_data(sync)
+        if data:
+            await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
+        await Scheduler.restart_source(sync.source)
 
     background_tasks.add_task(_)
 
