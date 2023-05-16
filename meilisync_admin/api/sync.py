@@ -104,36 +104,27 @@ async def refresh(
 
 
 class CheckResult(BaseModel):
-    sync_id: int
     count: int
     meili_count: int
 
 
 @router.get(
-    "/check",
+    "/check/{pk}",
     summary="检查同步",
     description="检查同步数据库和MeiliSearch中的数据数量是否一致",
-    response_model=List[CheckResult],
+    response_model=CheckResult,
 )
 async def check(
-    pks: str | None = None,
+    pk: int,
 ):
-    qs = Sync.all().select_related("source", "meilisearch")
-    if pks:
-        qs = qs.filter(pk__in=pks.split(","))
-    ret = []
-    for sync in await qs:
-        source_obj = sync.source.get_source()
-        count = await source_obj.get_count(sync)
-        meili_count = await sync.meili_client.get_count(sync.index)
-        ret.append(
-            CheckResult(
-                sync_id=sync.pk,
-                count=count,
-                meili_count=meili_count,
-            )
-        )
-    return ret
+    sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
+    source_obj = sync.source.get_source()
+    count = await source_obj.get_count(sync)
+    meili_count = await sync.meili_client.get_count(sync.index)
+    return CheckResult(
+        count=count,
+        meili_count=meili_count,
+    )
 
 
 @router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步")
