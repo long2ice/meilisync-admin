@@ -47,6 +47,11 @@ async def get_list(
     return ListResponse(total=total, data=data)
 
 
+@router.get("/basic", summary="获取同步列表基本信息")
+async def get_list_basic():
+    return await Sync.all().values("id", "label")
+
+
 class CreateBody(BaseModel):
     label: str
     source_id: int
@@ -186,13 +191,11 @@ async def logs(
         qs = qs.filter(sync__meilisearch_id=meilisearch_id)
     if type:
         qs = qs.filter(type=type)
-    qs = qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     total = await qs.count()
-    data = await qs
+    data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
     return LogsResponse(total=total, data=data)
 
 
 @router.delete("/logs/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步记录")
 async def delete_sync_logs(pks: str):
-    pk_list = pks.split(",")
-    await SyncLog.filter(pk__in=pk_list).delete()
+    await SyncLog.filter(pk__in=pks.split(",")).delete()
