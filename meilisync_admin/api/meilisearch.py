@@ -30,7 +30,12 @@ async def get_list(
     return ListResponse(total=total, data=data)
 
 
-class CreateBody(BaseModel):
+@router.get("/basic", summary="获取meilisearch列表基本信息")
+async def get_list_basic():
+    return await Meilisearch.all().values("id", "label")
+
+
+class Body(BaseModel):
     label: str
     api_key: str
     api_url: str
@@ -45,7 +50,7 @@ class CreateBody(BaseModel):
     description="如果同步记录已存在则返回`409`",
 )
 async def create(
-    body: CreateBody,
+    body: Body,
 ):
     try:
         await Meilisearch.create(**body.dict())
@@ -62,15 +67,7 @@ async def delete(pks: str):
         await m.delete()
 
 
-class UpdateBody(BaseModel):
-    label: Optional[str]
-    api_key: Optional[str]
-    api_url: Optional[str]
-    insert_size: Optional[int]
-    insert_interval: Optional[int]
-
-
-@router.patch(
+@router.put(
     "/{pk}",
     status_code=HTTP_204_NO_CONTENT,
     summary="更新meilisearch",
@@ -78,11 +75,11 @@ class UpdateBody(BaseModel):
 )
 async def update(
     pk: int,
-    body: UpdateBody,
+    body: Body,
 ):
     m = await Meilisearch.get(pk=pk)
     try:
-        await m.update_from_dict(body.dict(exclude_none=True)).save()
+        await m.update_from_dict(body.dict()).save()
     except IntegrityError:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT, detail="Meilisearch already exists"

@@ -36,6 +36,11 @@ class ListResponse(BaseModel):
     data: List[pydantic_model_creator(Source)]  # type: ignore
 
 
+@router.get("/basic", summary="获取数据源列表基本信息")
+async def get_list_basic():
+    return await Source.all().values("id", "label")
+
+
 @router.get("", response_model=ListResponse, summary="获取数据源列表")
 async def get_list(
     query: Query = Depends(Query),
@@ -52,7 +57,7 @@ async def get_list(
     return ListResponse(total=total, data=data)
 
 
-class CreateBody(CheckBody):
+class Body(CheckBody):
     label: str
 
 
@@ -64,7 +69,7 @@ class CreateBody(CheckBody):
     description="会检查数据源是否可用，如果不可用则返回`412`",
 )
 async def create(
-    body: CreateBody,
+    body: Body,
 ):
     await Source.create(**body.dict())
 
@@ -75,7 +80,7 @@ class UpdateBody(BaseModel):
     connection: Optional[Dict]
 
 
-@router.patch(
+@router.put(
     "/{pk}",
     status_code=HTTP_204_NO_CONTENT,
     summary="更新数据源",
@@ -84,15 +89,12 @@ class UpdateBody(BaseModel):
 )
 async def update(
     pk: int,
-    body: UpdateBody,
+    body: Body,
 ):
     source = await Source.get(pk=pk)
-    check_body = CheckBody(
-        type=body.type or source.type,
-        connection=body.connection or source.connection,
-    )
+    check_body = CheckBody(type=body.type, connection=body.connection)
     await check_source(check_body)
-    await source.update_from_dict(body.dict(exclude_none=True)).save()
+    await source.update_from_dict(body.dict()).save()
 
 
 @router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除数据源")

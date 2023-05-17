@@ -52,7 +52,7 @@ async def get_list_basic():
     return await Sync.all().values("id", "label")
 
 
-class CreateBody(BaseModel):
+class Body(BaseModel):
     label: str
     source_id: int
     meilisearch_id: int
@@ -71,7 +71,7 @@ class CreateBody(BaseModel):
     description="如果同步记录已存在则返回`409`",
 )
 async def create(
-    body: CreateBody,
+    body: Body,
 ):
     try:
         await Sync.create(**body.dict())
@@ -132,18 +132,7 @@ async def delete(pks: str):
         await sync.delete()
 
 
-class UpdateBody(BaseModel):
-    source_id: Optional[int]
-    full_sync: Optional[bool]
-    table: Optional[str]
-    index: Optional[str]
-    primary_key: Optional[str]
-    enabled: Optional[bool]
-    fields: Optional[Json]
-    meilisearch_id: Optional[int]
-
-
-@router.patch(
+@router.put(
     "/{pk}",
     status_code=HTTP_204_NO_CONTENT,
     summary="更新同步",
@@ -151,11 +140,11 @@ class UpdateBody(BaseModel):
 )
 async def update(
     pk: int,
-    body: UpdateBody,
+    body: Body,
 ):
     sync = await Sync.get(pk=pk)
     try:
-        await sync.update_from_dict(body.dict(exclude_none=True)).save()
+        await sync.update_from_dict(body.dict()).save()
     except IntegrityError:
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 
