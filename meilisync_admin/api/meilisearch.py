@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -37,10 +37,10 @@ async def get_list_basic():
 
 class Body(BaseModel):
     label: str
-    api_key: str
+    api_key: str | None
     api_url: str
-    insert_size: Optional[int]
-    insert_interval: Optional[int]
+    insert_size: int | None
+    insert_interval: int | None
 
 
 @router.post(

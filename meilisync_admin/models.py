@@ -63,7 +63,7 @@ class Sync(BaseModel):
 class Meilisearch(BaseModel):
     label = fields.CharField(max_length=255)
     api_url = fields.CharField(max_length=255, unique=True)
-    api_key = fields.CharField(max_length=255)
+    api_key = fields.CharField(max_length=255, null=True)
     insert_size = fields.IntField(null=True)
     insert_interval = fields.IntField(null=True)
 
