@@ -21,7 +21,7 @@ aerich = "*"
 fastapi = { version = "*", extras = ["all"] }
 python-i18n = "*"
 fastapi-jwt = "*"
-asyncmy = {version = "^0.2.8rc1", allow-prereleases = true}
+asyncmy = {version = "^0.2.8rc2", allow-prereleases = true}
 passlib = {version = "*", extras = ["bcrypt"]}
 typer = {version = "*", extras = ["all"]}
 pyconcrete = "*"
