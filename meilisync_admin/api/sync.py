@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from meilisync.enums import EventType
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
 from starlette.background import BackgroundTasks
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
 from tortoise.contrib.pydantic import pydantic_model_creator
@@ -61,7 +61,7 @@ class Body(BaseModel):
     index: str
     primary_key: str = "id"
     enabled: bool = True
-    fields: Optional[Json]
+    fields: dict | None
 
 
 @router.post(

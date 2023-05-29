@@ -22,13 +22,13 @@ jobs:
     needs:
       - build
     steps:
-      - name: Deploy
-        uses: appleboy/ssh-action@master
+      - name: Deploy meilisync-admin
+        uses: steebchen/kubectl@v2.0.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            cd /root/docker/meilisearch/
-            docker compose up -d --pull always
+          config: ${{ secrets.KUBE_CONFIG }}
+          command: rollout restart deployment meilisync-admin
+      - name: Deploy meilisync-admin-demo
+        uses: steebchen/kubectl@v2.0.0
+        with:
+          config: ${{ secrets.KUBE_CONFIG }}
+          command: rollout restart deployment meilisync-admin-demo
