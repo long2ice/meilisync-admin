@@ -15,7 +15,7 @@ repository = "https://github.com/meilisync/meilisync-admin.git"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = ["all"] , branch = "dev"}
+meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = ["all"],  branch = "dev"}
 tortoise-orm = "*"
 aerich = "*"
 fastapi = { version = "*", extras = ["all"] }
@@ -36,6 +36,7 @@ pytest = "*"
 ruff = "*"
 pytest-custom-exit-code = "*"
 types-aiofiles = "*"
+types-redis = "*"
 
 [tool.aerich]
 tortoise_orm = "meilisync_admin.settings.TORTOISE_ORM"

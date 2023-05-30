@@ -8,6 +8,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CON
 from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
+from meilisync_admin.libs.redis import Key, r
 from meilisync_admin.models import Sync, SyncLog
 from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.schema.request import Query
@@ -90,13 +91,14 @@ async def refresh(
     pk: int,
 ):
     async def _():
-        sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
-        source_obj = sync.source.get_source()
-        Scheduler.remove_source(sync.source.pk)
-        data = await source_obj.get_full_data(sync)
-        if data:
-            await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
-        await Scheduler.restart_source(sync.source, True)
+        async with r.lock(Key.refresh_lock.format(sync_id=pk), blocking=False):
+            sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
+            source_obj = sync.source.get_source()
+            Scheduler.remove_source(sync.source.pk)
+            data = await source_obj.get_full_data(sync)
+            if data:
+                await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
+            await Scheduler.restart_source(sync.source, True)
 
     background_tasks.add_task(_)
 
