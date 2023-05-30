@@ -25,12 +25,14 @@ class Scheduler:
             await cls._start_source(source)
 
     @classmethod
-    async def _start_source(cls, source: Source):
+    async def _start_source(cls, source: Source, reset_progress: bool = False):
         stats: Dict[int, Dict[EventType, int]] = {}
         lock = asyncio.Lock()
         progress = get_progress(ProgressType.redis)(
             dsn=settings.REDIS_URL, key=f"meilisync:progress:{source.pk}"
         )
+        if reset_progress:
+            await progress.reset()
         current_progress = await progress.get()
         collections_map: Dict[SyncSettings, EventCollection] = {}
         tables_sync_settings_map: Dict[str, List[Tuple[SyncSettings, Sync]]] = {}
@@ -172,8 +174,8 @@ class Scheduler:
             del cls._tasks[source_id]
 
     @classmethod
-    async def restart_source(cls, source: Source):
+    async def restart_source(cls, source: Source, reset_progress: bool = False):
         logger.info(f'Restart source "{source.label}"...')
         source_id = source.pk
         cls.remove_source(source_id)
-        await cls._start_source(source)
+        await cls._start_source(source, reset_progress)

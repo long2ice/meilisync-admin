@@ -96,7 +96,7 @@ async def refresh(
         data = await source_obj.get_full_data(sync)
         if data:
             await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
-        await Scheduler.restart_source(sync.source)
+        await Scheduler.restart_source(sync.source, True)
 
     background_tasks.add_task(_)
 
