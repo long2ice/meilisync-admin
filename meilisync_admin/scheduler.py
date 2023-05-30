@@ -15,8 +15,9 @@ from meilisync_admin.settings import settings
 
 
 class Runner:
-    def __init__(self, source: Source):
+    def __init__(self, source: Source, reset_progress: bool = False):
         self.current_progress = None
+        self.reset_progress = reset_progress
         self.lock = None
         self.queue = None
         self.source = source
@@ -37,6 +38,9 @@ class Runner:
         self.lock = asyncio.Lock()
         self.queue = asyncio.Queue()
         self.stats: Dict[int, Dict[EventType, int]] = {}
+        if self.reset_progress:
+            await self.progress.reset()
+        self.current_progress = await self.progress.get()
         syncs = (
             await Sync.filter(enabled=True, source=self.source)
             .all()
@@ -177,8 +181,8 @@ class Scheduler:
             cls._tasks[source.pk] = asyncio.create_task(cls._start_source(source))
 
     @classmethod
-    async def _start_source(cls, source: Source):
-        async with Runner(source) as runner:
+    async def _start_source(cls, source: Source, reset_progress: bool = False):
+        async with Runner(source, reset_progress) as runner:
             await runner.run()
 
     @classmethod
@@ -192,8 +196,10 @@ class Scheduler:
         del cls._tasks[source_id]
 
     @classmethod
-    async def restart_source(cls, source: Source):
+    async def restart_source(cls, source: Source, reset_progress: bool = False):
         logger.info(f'Restart source "{source.label}"...')
         source_id = source.pk
         cls.remove_source(source_id)
-        cls._tasks[source_id] = asyncio.ensure_future(cls._start_source(source))
+        cls._tasks[source_id] = asyncio.ensure_future(
+            cls._start_source(source, reset_progress)
+        )
