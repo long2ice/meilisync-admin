@@ -98,7 +98,9 @@ async def refresh(
             await sync.meili_client.refresh_data(
                 sync.index,
                 sync.primary_key,
-                source_obj.get_full_data(sync, sync.meilisearch.insert_size or 10000),
+                source_obj.get_full_data(
+                    sync.sync_config, sync.meilisearch.insert_size or 10000
+                ),
             )
             await Scheduler.restart_source(sync.source, True)
 

@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
 from meilisync.meili import Meili
+from meilisync.settings import Sync as SyncConfig
 from tortoise import Model, fields
 
 from meilisync_admin.validators import EmailValidator
@@ -57,6 +58,16 @@ class Sync(BaseModel):
             self.meilisearch.api_url,
             self.meilisearch.api_key,
             wait_for_task_timeout=10 * 60 * 1000,
+        )
+
+    @property
+    def sync_config(self):
+        return SyncConfig(
+            table=self.table,
+            fields=self.fields,
+            pk=self.primary_key,
+            full=self.full_sync,
+            index=self.index,
         )
 
 

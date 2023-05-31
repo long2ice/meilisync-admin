@@ -1,5 +1,3 @@
-from typing import Optional
-
 import sentry_sdk
 from pydantic import BaseSettings
 from sentry_sdk.integrations.redis import RedisIntegration
@@ -10,7 +8,7 @@ class Settings(BaseSettings):
     DB_URL: str
     REDIS_URL: str
     ENV = "production"
-    SENTRY_DSN: Optional[str]
+    SENTRY_DSN: str | None
     SECRET_KEY: str
     LICENSE: str
     HOST: str = "0.0.0.0"
