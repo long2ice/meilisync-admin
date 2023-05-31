@@ -170,8 +170,10 @@ class Runner:
             await asyncio.sleep(interval)
             try:
                 async with self.lock:  # type: ignore
+                    size = c.size
                     await m.handle_events(c)
-                    await self._save_progress()
+                    if size > 0:
+                        await self._save_progress()
             except Exception as e:
                 logger.error(f"Error when insert data to Meilisearch: {e}")
 
@@ -205,8 +207,6 @@ class Scheduler:
         task = cls._tasks.get(source_id)
         if task:
             task.cancel()
-            while not task.done():
-                await asyncio.sleep(0.1)
             del cls._tasks[source_id]
 
     @classmethod
