@@ -27,6 +27,7 @@ class Runner:
         self.tables_map_reverse: Dict[int, str] = {}
         self.meili_map: Dict[SyncSettings, Tuple[Meili, int]] = {}
         self.sync_settings: List[SyncSettings] = []
+        self._tasks: List[Task] = []
 
     @classmethod
     def get_progress(cls, source_id: int):
@@ -91,9 +92,11 @@ class Runner:
                         "done! No data found."
                     )
             if insert_interval:
-                asyncio.ensure_future(
-                    self.start_interval(
-                        meili, self.collections_map[ss], insert_interval
+                self._tasks.append(
+                    asyncio.create_task(
+                        self.start_interval(
+                            meili, self.collections_map[ss], insert_interval
+                        )
                     )
                 )
         return self
@@ -173,7 +176,9 @@ class Runner:
                 logger.error(f"Error when insert data to Meilisearch: {e}")
 
     async def run(self):
-        await asyncio.gather(self.save_stats(), self.sync_data(), self.listen())
+        await asyncio.gather(
+            self.save_stats(), self.sync_data(), self.listen(), *self._tasks
+        )
 
 
 class Scheduler:
@@ -196,14 +201,15 @@ class Scheduler:
             task.cancel()
 
     @classmethod
-    def remove_source(cls, source_id: int):
-        if source_id in cls._tasks:
-            cls._tasks[source_id].cancel()
+    async def remove_source(cls, source_id: int):
+        task = cls._tasks.get(source_id)
+        if task:
+            task.cancel()
             del cls._tasks[source_id]
 
     @classmethod
     async def restart_source(cls, source: Source):
         logger.info(f'Restart source "{source.label}"...')
         source_id = source.pk
-        cls.remove_source(source_id)
+        await cls.remove_source(source_id)
         cls._tasks[source_id] = asyncio.ensure_future(cls._start_source(source))

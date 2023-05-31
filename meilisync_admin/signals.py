@@ -13,7 +13,7 @@ async def post_save_source(
 
 @post_delete(Source)
 async def post_delete_source(sender: Source, instance: Source, using_db: bool):
-    Scheduler.remove_source(instance.pk)
+    await Scheduler.remove_source(instance.pk)
 
 
 @post_save(Sync)
