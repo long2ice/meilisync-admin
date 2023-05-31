@@ -71,4 +71,9 @@ async def shutdown():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
+    uvicorn.run(
+        "meilisync_admin.app:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,
+    )

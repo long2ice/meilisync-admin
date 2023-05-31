@@ -205,6 +205,8 @@ class Scheduler:
         task = cls._tasks.get(source_id)
         if task:
             task.cancel()
+            while not task.done():
+                await asyncio.sleep(0.1)
             del cls._tasks[source_id]
 
     @classmethod
