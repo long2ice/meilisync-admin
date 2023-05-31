@@ -10,7 +10,7 @@ from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.libs.redis import Key, r
 from meilisync_admin.models import Sync, SyncLog
-from meilisync_admin.scheduler import Scheduler
+from meilisync_admin.scheduler import Runner, Scheduler
 from meilisync_admin.schema.request import Query
 
 router = APIRouter()
@@ -95,6 +95,8 @@ async def refresh(
             sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
             source_obj = sync.source.get_source()
             Scheduler.remove_source(sync.source.pk)
+            progress = Runner.get_progress(sync.source.pk)
+            await progress.set(**await source_obj.get_current_progress())
             await sync.meili_client.refresh_data(
                 sync.index,
                 sync.primary_key,
@@ -102,7 +104,9 @@ async def refresh(
                     sync.sync_config, sync.meilisearch.insert_size or 10000
                 ),
             )
-            await Scheduler.restart_source(sync.source, True)
+            await Scheduler.restart_source(
+                sync.source,
+            )
 
     background_tasks.add_task(_)
 
