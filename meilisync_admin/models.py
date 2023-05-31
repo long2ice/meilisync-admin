@@ -57,7 +57,6 @@ class Sync(BaseModel):
         return Meili(
             self.meilisearch.api_url,
             self.meilisearch.api_key,
-            wait_for_task_timeout=10 * 60 * 1000,
         )
 
     @property
