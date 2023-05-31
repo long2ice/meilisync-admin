@@ -42,7 +42,9 @@ class Runner:
             await self.progress.reset()
         self.current_progress = await self.progress.get()
         syncs = (
-            await Sync.filter(enabled=True, source=self.source).all().select_related("meilisearch")
+            await Sync.filter(enabled=True, source=self.source)
+            .all()
+            .select_related("meilisearch")
         )
         for sync in syncs:
             self.tables_map_reverse[sync.pk] = sync.table
@@ -53,7 +55,9 @@ class Runner:
                 index=sync.index,
                 fields=sync.fields,
             )
-            self.tables_sync_settings_map.setdefault(sync.table, []).append((sync_setting, sync))
+            self.tables_sync_settings_map.setdefault(sync.table, []).append(
+                (sync_setting, sync)
+            )
             self.collections_map[sync_setting] = EventCollection()
             self.meili_map[sync_setting] = (
                 sync.meili_client,
@@ -69,12 +73,16 @@ class Runner:
         for ss in self.sync_settings:
             meili, insert_interval = self.meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
-                data = await self.source_obj.get_full_data(ss)
-                if data:
-                    await meili.add_full_data(ss.index_name, ss.pk, data)
+                count = 0
+                async for items in self.source_obj.get_full_data(
+                    ss, insert_interval or 10000
+                ):
+                    count += len(items)
+                    await meili.add_full_data(ss.index_name, ss.pk, items)
+                if count:
                     logger.info(
                         f'Full data sync for table "{self.source.label}.{ss.table}" '
-                        f"done! {len(data)} documents added."
+                        f"done! {count} documents added."
                     )
                 else:
                     logger.info(
@@ -83,7 +91,9 @@ class Runner:
                     )
             if insert_interval:
                 asyncio.ensure_future(
-                    self.start_interval(meili, self.collections_map[ss], insert_interval)
+                    self.start_interval(
+                        meili, self.collections_map[ss], insert_interval
+                    )
                 )
         return self
 
@@ -96,9 +106,12 @@ class Runner:
                     total = 0
                     for event_type, count in events.items():
                         total += count
-                        objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
+                        objs.append(
+                            SyncLog(sync_id=sync_id, count=count, type=event_type)
+                        )
                     stats_str = ", ".join(
-                        f"{event_type.name}: {count}" for event_type, count in events.items()
+                        f"{event_type.name}: {count}"
+                        for event_type, count in events.items()
                     )
                     logger.info(
                         f'Save {total} sync logs for table "{self.source.label}'
@@ -192,4 +205,6 @@ class Scheduler:
         logger.info(f'Restart source "{source.label}"...')
         source_id = source.pk
         cls.remove_source(source_id)
-        cls._tasks[source_id] = asyncio.ensure_future(cls._start_source(source, reset_progress))
+        cls._tasks[source_id] = asyncio.ensure_future(
+            cls._start_source(source, reset_progress)
+        )

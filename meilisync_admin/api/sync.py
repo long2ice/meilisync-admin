@@ -95,9 +95,11 @@ async def refresh(
             sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
             source_obj = sync.source.get_source()
             Scheduler.remove_source(sync.source.pk)
-            data = await source_obj.get_full_data(sync)
-            if data:
-                await sync.meili_client.refresh_data(sync.index, sync.primary_key, data)
+            await sync.meili_client.refresh_data(
+                sync.index,
+                sync.primary_key,
+                source_obj.get_full_data(sync, sync.meilisearch.insert_size or 10000),
+            )
             await Scheduler.restart_source(sync.source, True)
 
     background_tasks.add_task(_)
