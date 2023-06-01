@@ -8,22 +8,22 @@ documentation = "https://github.com/meilisync/meilisync-admin"
 include = ["CHANGELOG.md", "LICENSE", "README.md"]
 keywords = ["meilisearch", "postgres", "mysql"]
 license = "Apache-2.0"
-packages = [
-    { include = "meilisync_admin" },
-]
+packages = [{ include = "meilisync_admin" }]
 repository = "https://github.com/meilisync/meilisync-admin.git"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = ["all"],  branch = "dev"}
+asyncmy = { git = "https://github.com/long2ice/asyncmy.git" }
+python = "^3.11"
+meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = [
+    "all",
+], branch = "dev" }
 tortoise-orm = "*"
 aerich = "*"
 fastapi = { version = "*", extras = ["all"] }
 python-i18n = "*"
 fastapi-jwt = "*"
-asyncmy = {version = "^0.2.8rc2", allow-prereleases = true}
-passlib = {version = "*", extras = ["bcrypt"]}
-typer = {version = "*", extras = ["all"]}
+passlib = { version = "*", extras = ["bcrypt"] }
+typer = { version = "*", extras = ["all"] }
 pyconcrete = "*"
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
