@@ -75,13 +75,12 @@ class Runner:
         for ss in self.sync_settings:
             meili, insert_interval = self.meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
-                count = 0
-                async for items in self.source_obj.get_full_data(
-                    ss, insert_interval or 10000
-                ):
-                    count += len(items)
-                    await meili.add_full_data(ss.index_name, ss.pk, items)
-                if count:
+                _, count = await meili.add_full_data(
+                    ss.index_name,
+                    ss.pk,
+                    self.source_obj.get_full_data(ss, insert_interval or 10000),
+                )
+                if count > 0:
                     logger.info(
                         f'Full data sync for table "{self.source.label}.{ss.table}" '
                         f"done! {count} documents added."
