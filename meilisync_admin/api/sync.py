@@ -1,9 +1,7 @@
-import asyncio
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
-from meilisearch_python_async.task import wait_for_task
 from meilisync.enums import EventType
 from pydantic import BaseModel
 from starlette.background import BackgroundTasks
@@ -100,25 +98,14 @@ async def refresh(
             await Scheduler.remove_source(sync.source.pk)
             progress = Runner.get_progress(sync.source.pk)
             await progress.set(**await source_obj.get_current_progress())
-            tasks, count = await sync.meili_client.refresh_data(
+            count = await sync.meili_client.refresh_data(
                 sync.index,
                 sync.primary_key,
                 source_obj.get_full_data(
                     sync.sync_config, sync.meilisearch.insert_size or 10000
                 ),
             )
-            logger.info(
-                f"Refresh {sync.label} {count} items, wait for tasks complete..."
-            )
-            wait_tasks = [
-                wait_for_task(
-                    client=sync.meili_client,
-                    task_id=item.task_uid,
-                    timeout_in_ms=None,
-                )
-                for item in tasks
-            ]
-            await asyncio.gather(*wait_tasks)
+            logger.success(f"Refreshed {count} records!")
             await Scheduler.restart_source(
                 sync.source,
             )
