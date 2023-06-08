@@ -822,7 +822,7 @@ sentry = ["sentry-sdk"]
 type = "git"
 url = "https://github.com/meilisync/meilisync.git"
 reference = "dev"
-resolved_reference = "3a8dd7587af22ff13faa2b6641b7595af91502dc"
+resolved_reference = "83d0710bdcbad63e198663245843c8b38d5edc67"
 
 [[package]]
 name = "motor"
