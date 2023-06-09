@@ -27,6 +27,7 @@ typer = { version = "*", extras = ["all"] }
 pyconcrete = "*"
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
+py-machineid = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

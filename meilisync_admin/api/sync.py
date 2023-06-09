@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,6 +21,8 @@ router = APIRouter()
 class SyncItem(pydantic_model_creator(Sync)):  # type: ignore
     meilisearch_id: int
     source_id: int
+    source_count: int
+    meilisearch_count: int
 
 
 class ListResponse(BaseModel):
@@ -45,7 +48,15 @@ async def get_list(
     if label:
         qs = qs.filter(label__icontains=label)
     total = await qs.count()
-    data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
+    data = (
+        await qs.select_related("source", "meilisearch")
+        .limit(query.limit)
+        .offset(query.offset)
+        .order_by(*query.orders)
+    )
+    await asyncio.gather(
+        *[item.get_count() for item in data],
+    )
     return ListResponse(total=total, data=data)
 
 
@@ -111,30 +122,6 @@ async def refresh(
             )
 
     background_tasks.add_task(_)
-
-
-class CheckResult(BaseModel):
-    count: int
-    meili_count: int
-
-
-@router.get(
-    "/check/{pk}",
-    summary="检查同步",
-    description="检查同步数据库和MeiliSearch中的数据数量是否一致",
-    response_model=CheckResult,
-)
-async def check(
-    pk: int,
-):
-    sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
-    source_obj = sync.source.get_source()
-    count = await source_obj.get_count(sync)
-    meili_count = await sync.meili_client.get_count(sync.index)
-    return CheckResult(
-        count=count,
-        meili_count=meili_count,
-    )
 
 
 @router.delete("/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步")

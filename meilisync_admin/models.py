@@ -48,6 +48,8 @@ class Sync(BaseModel):
         "models.Meilisearch"
     )
     fields = fields.JSONField(null=True)
+    source_count: int
+    meilisearch_count: int
 
     class Meta:
         unique_together = [("meilisearch", "source", "table")]
@@ -68,6 +70,10 @@ class Sync(BaseModel):
             full=self.full_sync,
             index=self.index,
         )
+
+    async def get_count(self):
+        self.source_count = await self.source.get_source().get_count(self)
+        self.meilisearch_count = await self.meili_client.get_count(self.index)
 
 
 class Meilisearch(BaseModel):

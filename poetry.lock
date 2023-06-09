@@ -1102,6 +1102,20 @@ files = [
 ]
 
 [[package]]
+name = "py-machineid"
+version = "0.3.0"
+description = "Get the unique machine ID of any host (without admin privileges)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "py-machineid-0.3.0.tar.gz", hash = "sha256:8a7965a8067b95e9598750d9a75b90a9ceece36c52256fb1e4118e2fc9880716"},
+    {file = "py_machineid-0.3.0-py3-none-any.whl", hash = "sha256:220236c1f55eb2285014474ad1dd7e05eaa897d40d2b2b544866c166add383f1"},
+]
+
+[package.dependencies]
+winregistry = "*"
+
+[[package]]
 name = "pyasn1"
 version = "0.5.0"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
@@ -2045,7 +2059,18 @@ files = [
 [package.extras]
 dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 
+[[package]]
+name = "winregistry"
+version = "1.1.1"
+description = "Library aimed at working with Windows registry"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "winregistry-1.1.1-py3-none-any.whl", hash = "sha256:ad4be5a488838266b4bf826712d640db3daadd1f97ba46820f834a98868b3bc1"},
+    {file = "winregistry-1.1.1.tar.gz", hash = "sha256:942fecad3751c1b78b9e6b0a520266903c3023f104668ce1bdbf381ec993ad8b"},
+]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ae3748b0a7c36b2a08c7dd57c49358669b3d62c298c60ff0b389c6f3549f309e"
+content-hash = "4b61f312f71ad9742932fb141453d4e618b8073720cc1f89c6fade5c89016c99"
