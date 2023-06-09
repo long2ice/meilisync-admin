@@ -28,10 +28,11 @@ LICENSE = None
 async def load_license():
     global LICENSE
     machine_id = machineid.hashed_id()
+    logger.info(f"Machine ID: {machine_id}")
     if not os.path.exists(settings.LICENSE):
         raise RuntimeError(
             "License file not found, please contact long2ice@gmail.com "
-            f"to get a license file with machine ID: {machine_id}"
+            f"to get a license file with machine ID."
         )
     async with aiofiles.open(settings.LICENSE, "r") as f:
         content = await f.read()
@@ -44,6 +45,4 @@ async def load_license():
             raise RuntimeError("License expired")
         if LICENSE.machine_id != machine_id:
             raise RuntimeError("Invalid machine ID")
-        logger.info(
-            f"License loaded, expire at: {LICENSE.expire}, license to: {LICENSE.name}"
-        )
+        logger.info(f"License loaded, expire at: {LICENSE.expire}, license to: {LICENSE.name}")
