@@ -4,7 +4,7 @@ RUN git clone https://$GIT_TOKEN@github.com/long2ice/meilisync-web.git /meilisyn
 WORKDIR /meilisync-web
 RUN npm install && npm run build
 
-FROM python:3.11 as builder
+FROM python:3.11.3 as builder
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 ENV PYCONCRETE_PASSPHRASE=long2ice
 RUN mkdir -p /meilisync_admin
@@ -15,7 +15,7 @@ RUN pip3 install poetry && poetry install --no-root
 COPY . /meilisync_admin
 RUN poetry install
 
-FROM python:3.11-slim
+FROM python:3.11.3-slim
 WORKDIR /meilisync_admin
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin/ /usr/local/bin/

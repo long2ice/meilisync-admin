@@ -36,7 +36,8 @@ class Runner:
         )
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
+        if exc_type:
+            logger.exception(exc_val)
 
     async def __aenter__(self):
         self.lock = asyncio.Lock()
@@ -71,7 +72,6 @@ class Runner:
         self.source_obj = self.source.get_source(
             self.current_progress, list(self.tables_sync_settings_map.keys())
         )
-
         for ss in self.sync_settings:
             meili, insert_interval = self.meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
@@ -139,17 +139,17 @@ class Runner:
             if not ss_list:
                 continue
             async with self.lock:
-                for setting, sync_model in ss_list:
-                    m, _ = self.meili_map[setting]
+                for ss, sync_model in ss_list:
+                    m, _ = self.meili_map[ss]
                     meilisearch = sync_model.meilisearch
                     self.stats.setdefault(sync_model.pk, {}).setdefault(event.type, 0)
                     self.stats[sync_model.pk][event.type] += 1
                     if not meilisearch.insert_size and not meilisearch.insert_interval:
-                        await m.handle_event(event, setting)
+                        await m.handle_event(event, ss)
                         await self._save_progress()
                     else:
-                        collection = self.collections_map[setting]
-                        collection.add_event(setting, event)
+                        collection = self.collections_map[ss]
+                        collection.add_event(ss, event)
                         if collection.size >= meilisearch.insert_size:
                             await m.handle_events(collection)
                             await self._save_progress()
