@@ -1,5 +1,5 @@
 import asyncio
-from asyncio import Task
+from asyncio import CancelledError, Task
 from typing import Dict, List, Tuple
 
 from loguru import logger
@@ -193,7 +193,10 @@ class Scheduler:
     @classmethod
     async def _start_source(cls, source: Source):
         async with Runner(source) as runner:
-            await runner.run()
+            try:
+                await runner.run()
+            except CancelledError:
+                pass
 
     @classmethod
     def shutdown(cls):

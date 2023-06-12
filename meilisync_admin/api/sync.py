@@ -106,7 +106,7 @@ async def refresh(
         async with r.lock(Key.refresh_lock.format(sync_id=pk), blocking=False):
             sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
             source_obj = sync.source.get_source()
-            await Scheduler.remove_source(sync.source.pk)
+            Scheduler.remove_source(sync.source.pk)
             progress = Runner.get_progress(sync.source.pk)
             await progress.set(**await source_obj.get_current_progress())
             count = await sync.meili_client.refresh_data(
