@@ -160,8 +160,7 @@ class Runner:
             f' tables: {", ".join(self.tables_sync_settings_map.keys())}...'
         )
         async for event in self.source_obj:
-            if settings.DEBUG:
-                logger.debug(event)
+            logger.debug(event)
             await self.queue.put(event)
 
     async def start_interval(self, m: Meili, c: EventCollection, interval: int):
@@ -202,7 +201,7 @@ class Scheduler:
             task.cancel()
 
     @classmethod
-    async def remove_source(cls, source_id: int):
+    def remove_source(cls, source_id: int):
         task = cls._tasks.get(source_id)
         if task:
             task.cancel()
@@ -212,5 +211,5 @@ class Scheduler:
     async def restart_source(cls, source: Source):
         logger.info(f'Restart source "{source.label}"...')
         source_id = source.pk
-        await cls.remove_source(source_id)
+        cls.remove_source(source_id)
         cls._tasks[source_id] = asyncio.ensure_future(cls._start_source(source))

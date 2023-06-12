@@ -1,6 +1,9 @@
 import logging
+import sys
 
 from loguru import logger
+
+from meilisync_admin.settings import settings
 
 
 class InterceptHandler(logging.Handler):
@@ -15,3 +18,10 @@ def init_logging():
         uvicorn.removeHandler(h)
     handler = InterceptHandler()
     uvicorn.addHandler(handler)
+
+
+logger.remove()
+if settings.DEBUG:
+    logger.add(sys.stderr, level="DEBUG")
+else:
+    logger.add(sys.stderr, level="INFO")
