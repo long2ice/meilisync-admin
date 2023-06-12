@@ -11,7 +11,7 @@ RUN mkdir -p /meilisync_admin
 WORKDIR /meilisync_admin
 COPY pyproject.toml poetry.lock /meilisync_admin/
 ENV POETRY_VIRTUALENVS_CREATE false
-RUN pip3 install poetry && poetry install --no-root
+RUN pip3 install poetry pyconcrete && poetry install --no-root
 COPY . /meilisync_admin
 RUN poetry install
 

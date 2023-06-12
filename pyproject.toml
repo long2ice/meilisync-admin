@@ -23,7 +23,6 @@ python-i18n = "*"
 fastapi-jwt = "*"
 passlib = { version = "*", extras = ["bcrypt"] }
 typer = { version = "*", extras = ["all"] }
-pyconcrete = "*"
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
 py-machineid = "*"

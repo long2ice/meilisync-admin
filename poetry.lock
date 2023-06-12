@@ -819,7 +819,7 @@ sentry = ["sentry-sdk"]
 type = "git"
 url = "https://github.com/meilisync/meilisync.git"
 reference = "dev"
-resolved_reference = "013844be19f961ea320f5b7cf667379080de6e2b"
+resolved_reference = "3cb2f03ccca3151194ebd3f15e2140ca69289afb"
 
 [[package]]
 name = "motor"
@@ -1121,16 +1121,6 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
     {file = "pyasn1-0.5.0-py2.py3-none-any.whl", hash = "sha256:87a2121042a1ac9358cabcaf1d07680ff97ee6404333bacca15f76aa8ad01a57"},
     {file = "pyasn1-0.5.0.tar.gz", hash = "sha256:97b7290ca68e62a832558ec3976f15cbf911bf5d7c7039d8b861c2a0ece69fde"},
-]
-
-[[package]]
-name = "pyconcrete"
-version = "0.15.1"
-description = "Protect your python script, encrypt it as .pye and decrypt when import it"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pyconcrete-0.15.1.tar.gz", hash = "sha256:1e47270fe37a31733ea3b64f8e14da706c13fd91a67c30cd19278a71c1eda9fc"},
 ]
 
 [[package]]
@@ -2067,4 +2057,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "c5efed1874ba6e3da2315f1ff122b4f8735065978deef96552ca0d281c25b848"
+content-hash = "a1a8bae102614ef4cb46fa506fec41e279401b0bf90ecd563aaa7912df7ee41a"
