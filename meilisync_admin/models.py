@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from meilisearch_python_async.errors import MeilisearchApiError
 from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
 from meilisync.meili import Meili
@@ -73,7 +74,12 @@ class Sync(BaseModel):
 
     async def get_count(self):
         self.source_count = await self.source.get_source().get_count(self)
-        self.meilisearch_count = await self.meili_client.get_count(self.index)
+        try:
+            self.meilisearch_count = await self.meili_client.get_count(self.index)
+        except MeilisearchApiError as e:
+            if e.code != "MeilisearchApiError.index_not_found":
+                raise e
+            self.meilisearch_count = 0
 
 
 class Meilisearch(BaseModel):
