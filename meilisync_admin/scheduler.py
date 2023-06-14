@@ -45,9 +45,7 @@ class Runner:
         self.stats: Dict[int, Dict[EventType, int]] = {}
         self.current_progress = await self.progress.get()
         syncs = (
-            await Sync.filter(enabled=True, source=self.source)
-            .all()
-            .select_related("meilisearch")
+            await Sync.filter(enabled=True, source=self.source).all().select_related("meilisearch")
         )
         for sync in syncs:
             self.tables_map_reverse[sync.pk] = sync.table
@@ -58,9 +56,7 @@ class Runner:
                 index=sync.index,
                 fields=sync.fields,
             )
-            self.tables_sync_settings_map.setdefault(sync.table, []).append(
-                (sync_setting, sync)
-            )
+            self.tables_sync_settings_map.setdefault(sync.table, []).append((sync_setting, sync))
             self.collections_map[sync_setting] = EventCollection()
             self.meili_map[sync_setting] = (
                 sync.meili_client,
@@ -93,9 +89,7 @@ class Runner:
             if insert_interval:
                 self._tasks.append(
                     asyncio.create_task(
-                        self.start_interval(
-                            meili, self.collections_map[ss], insert_interval
-                        )
+                        self.start_interval(meili, self.collections_map[ss], insert_interval)
                     )
                 )
         return self
@@ -109,12 +103,9 @@ class Runner:
                     total = 0
                     for event_type, count in events.items():
                         total += count
-                        objs.append(
-                            SyncLog(sync_id=sync_id, count=count, type=event_type)
-                        )
+                        objs.append(SyncLog(sync_id=sync_id, count=count, type=event_type))
                     stats_str = ", ".join(
-                        f"{event_type.name}: {count}"
-                        for event_type, count in events.items()
+                        f"{event_type.name}: {count}" for event_type, count in events.items()
                     )
                     logger.info(
                         f'Save {total} sync logs for table "{self.source.label}'
@@ -176,9 +167,7 @@ class Runner:
                 logger.error(f"Error when insert data to Meilisearch: {e}")
 
     async def run(self):
-        await asyncio.gather(
-            self.save_stats(), self.sync_data(), self.listen(), *self._tasks
-        )
+        await asyncio.gather(self.save_stats(), self.sync_data(), self.listen(), *self._tasks)
 
 
 class Scheduler:
@@ -197,6 +186,9 @@ class Scheduler:
                 await runner.run()
             except CancelledError:
                 pass
+            except Exception as e:
+                logger.exception(f"Error when sync data: {e}")
+                await cls.restart_source(source)
 
     @classmethod
     def shutdown(cls):
