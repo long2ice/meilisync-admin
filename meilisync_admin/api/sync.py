@@ -3,6 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
+from meilisearch_python_async.models.settings import MeilisearchSettings
 from meilisync.enums import EventType
 from pydantic import BaseModel
 from starlette.background import BackgroundTasks
@@ -75,6 +76,7 @@ class Body(BaseModel):
     primary_key: str = "id"
     enabled: bool = True
     fields: dict | None
+    index_settings: MeilisearchSettings | None
 
 
 @router.post(
@@ -87,7 +89,9 @@ async def create(
     body: Body,
 ):
     try:
-        await Sync.create(**body.dict())
+        sync = await Sync.create(**body.dict())
+        await sync.meilisearch
+        await sync.create_index()
     except IntegrityError:
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 
@@ -141,9 +145,10 @@ async def update(
     pk: int,
     body: Body,
 ):
-    sync = await Sync.get(pk=pk)
+    sync = await Sync.get(pk=pk).select_related("meilisearch")
     try:
         await sync.update_from_dict(body.dict()).save()
+        await sync.update_settings()
     except IntegrityError:
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 

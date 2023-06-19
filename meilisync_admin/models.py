@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from meilisearch_python_async.errors import MeilisearchApiError
+from meilisearch_python_async.models.settings import MeilisearchSettings
 from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
 from meilisync.meili import Meili
@@ -45,6 +46,7 @@ class Sync(BaseModel):
     index = fields.CharField(max_length=255)
     primary_key = fields.CharField(max_length=255, default="id")
     enabled = fields.BooleanField(default=True)
+    index_settings = fields.JSONField(null=True)
     meilisearch: fields.ForeignKeyRelation["Meilisearch"] = fields.ForeignKeyField(
         "models.Meilisearch"
     )
@@ -61,6 +63,16 @@ class Sync(BaseModel):
             self.meilisearch.api_url,
             self.meilisearch.api_key,
         )
+
+    async def create_index(self):
+        await self.meili_client.client.create_index(self.index, self.primary_key)
+        await self.update_settings()
+
+    async def update_settings(self):
+        if self.index_settings:
+            await self.meili_client.client.index(self.index).update_settings(
+                MeilisearchSettings.parse_obj(self.index_settings)
+            )
 
     @property
     def sync_config(self):
