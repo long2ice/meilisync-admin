@@ -16,7 +16,7 @@ def generate(
     ),
     end_days: int = typer.Option(None, "-d", "--end-days", help="License expire days"),
     name: str = typer.Option(..., "-n", "--name", help="License name"),
-    machine_id: str | None = typer.Option(None, "-m", "--machine-id", help="Unique machine ID"),
+    machine_id: str = typer.Option(None, "-m", "--machine-id", help="Unique machine ID"),
 ):
     if not end_date and not end_days:
         raise typer.BadParameter("Must specify end_date or end_days")
