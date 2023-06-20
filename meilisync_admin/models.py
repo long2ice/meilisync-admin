@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from loguru import logger
 from meilisearch_python_async.errors import MeilisearchApiError
 from meilisearch_python_async.models.settings import MeilisearchSettings
 from meilisync.discover import get_source
@@ -89,8 +90,7 @@ class Sync(BaseModel):
         try:
             self.meilisearch_count = await self.meili_client.get_count(self.index)
         except MeilisearchApiError as e:
-            if e.code != "MeilisearchApiError.index_not_found":
-                raise e
+            logger.exception(f'Failed to get count for index "{self.index}"')
             self.meilisearch_count = 0
 
 
