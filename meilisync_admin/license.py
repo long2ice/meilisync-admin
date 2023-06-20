@@ -15,8 +15,7 @@ ENCRYPT_KEY = b"AAFCOToFiXipuZIx0MDaUohmS3IVisALfmE_ylk9zRI="
 class License(BaseModel):
     expire: datetime.date
     name: str
-    machine_id: str
-    check: bool
+    machine_id: str | None
 
     @property
     def is_expired(self):
@@ -44,7 +43,7 @@ async def load_license():
             raise RuntimeError(f"Invalid license file: {e}")
         if LICENSE.is_expired:
             raise RuntimeError("License expired")
-        if LICENSE.check and LICENSE.machine_id != machine_id:
+        if LICENSE.machine_id and LICENSE.machine_id != machine_id:
             raise RuntimeError("Invalid machine ID")
         logger.info(
             f"License loaded, expire at: {LICENSE.expire}, license to: {LICENSE.name}"
