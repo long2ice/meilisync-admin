@@ -8,4 +8,3 @@ auth:
   not_active: "用户禁止登录"
   not_superuser: "只有管理员用户才能操作"
   not_login: "用户未登录"
-license_expired: "授权已经过期"

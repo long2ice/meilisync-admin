@@ -1,1 +1,1 @@
-from . import signals  # noqa
+from meilisync_admin import signals

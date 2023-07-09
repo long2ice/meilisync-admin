@@ -8,4 +8,3 @@ auth:
   not_active: "User not active"
   not_superuser: "Only superuser can do this"
   not_login: "User not login"
-license_expired: "License expired"
