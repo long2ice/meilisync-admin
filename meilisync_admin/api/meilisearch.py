@@ -1,9 +1,6 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
-from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.models import Meilisearch
@@ -12,12 +9,7 @@ from meilisync_admin.schema.request import Query
 router = APIRouter()
 
 
-class ListResponse(BaseModel):
-    total: int
-    data: List[pydantic_model_creator(Meilisearch)]  # type: ignore
-
-
-@router.get("", response_model=ListResponse, summary="获取meilisearch列表")
+@router.get("", summary="获取meilisearch列表")
 async def get_list(
     query: Query = Depends(Query),
     label: str | None = None,
@@ -27,7 +19,7 @@ async def get_list(
         qs = qs.filter(label__icontains=label)
     total = await qs.count()
     data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
-    return ListResponse(total=total, data=data)
+    return dict(total=total, data=data)
 
 
 @router.get("/basic", summary="获取meilisearch列表基本信息")

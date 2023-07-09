@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi_jwt import JwtAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
-from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 from tortoise.exceptions import IntegrityError
 from tortoise.expressions import Q
 
@@ -16,14 +15,7 @@ from meilisync_admin.schema.request import Query
 router = APIRouter()
 
 
-class GetAdminResponse(BaseModel):
-    total: int
-    data: pydantic_queryset_creator(  # type: ignore
-        Admin,
-    )
-
-
-@router.get("", response_model=GetAdminResponse)
+@router.get("")
 async def get_admin(
     search: str | None = None,
     is_active: bool | None = None,
@@ -42,7 +34,7 @@ async def get_admin(
     return {"total": total, "data": data}
 
 
-@router.get("/me", response_model=pydantic_model_creator(Admin, exclude=("password",)))
+@router.get("/me")
 async def get_me(
     credentials: JwtAuthorizationCredentials = Security(access_security),
 ):

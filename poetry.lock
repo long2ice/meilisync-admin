@@ -810,6 +810,7 @@ loguru = "*"
 meilisearch-python-async = "*"
 motor = {version = "*", optional = true}
 psycopg2-binary = {version = "*", optional = true}
+pydantic-settings = "*"
 pyyaml = "*"
 redis = "*"
 sentry-sdk = "*"
@@ -827,7 +828,7 @@ sentry = ["sentry-sdk"]
 type = "git"
 url = "https://github.com/meilisync/meilisync.git"
 reference = "dev"
-resolved_reference = "e86dff6bd295986036df74f21ce6f6e3237f4ad8"
+resolved_reference = "a9dab06b72d18307db2a23eb9c558fcbea3ccc77"
 
 [[package]]
 name = "motor"
@@ -2152,4 +2153,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e94583c271e5d33654c166893b34ddb10e3e19109b7bfdc451d437b75aa909af"
+content-hash = "18346dcb2268e02c7115d6a3a6a67ec0b20a7fa01084e7672ad8794bc283c1e8"

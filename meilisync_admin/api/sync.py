@@ -1,5 +1,4 @@
 import asyncio
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
@@ -8,7 +7,6 @@ from meilisync.enums import EventType
 from pydantic import BaseModel
 from starlette.background import BackgroundTasks
 from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_409_CONFLICT
-from tortoise.contrib.pydantic import pydantic_model_creator
 from tortoise.exceptions import IntegrityError
 
 from meilisync_admin.libs.redis import Key, r
@@ -19,19 +17,7 @@ from meilisync_admin.schema.request import Query
 router = APIRouter()
 
 
-class SyncItem(pydantic_model_creator(Sync)):  # type: ignore
-    meilisearch_id: int
-    source_id: int
-    source_count: int
-    meilisearch_count: int
-
-
-class ListResponse(BaseModel):
-    total: int
-    data: List[SyncItem]
-
-
-@router.get("", response_model=ListResponse, summary="获取同步列表")
+@router.get("", summary="获取同步列表")
 async def get_list(
     query: Query = Depends(Query),
     source_id: int | None = None,
@@ -58,7 +44,7 @@ async def get_list(
     await asyncio.gather(
         *[item.get_count() for item in data],
     )
-    return ListResponse(total=total, data=data)
+    return dict(total=total, data=data)
 
 
 @router.get("/basic", summary="获取同步列表基本信息")
@@ -156,18 +142,8 @@ async def update(
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")
 
 
-class SyncLogResponse(pydantic_model_creator(SyncLog)):  # type: ignore
-    sync_id: int
-
-
-class LogsResponse(BaseModel):
-    total: int
-    data: list[SyncLogResponse]
-
-
 @router.get(
     "/logs",
-    response_model=LogsResponse,
     summary="获取同步日志",
     description="每分钟记录一次，包括同步数量和类型",
 )
@@ -189,7 +165,7 @@ async def logs(
         qs = qs.filter(type=type)
     total = await qs.count()
     data = await qs.limit(query.limit).offset(query.offset).order_by(*query.orders)
-    return LogsResponse(total=total, data=data)
+    return dict(total=total, data=data)
 
 
 @router.delete("/logs/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步记录")

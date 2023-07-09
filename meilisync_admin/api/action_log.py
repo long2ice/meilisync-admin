@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 from meilisync_admin.models import ActionLog
 from meilisync_admin.schema.request import Query
@@ -8,16 +6,7 @@ from meilisync_admin.schema.request import Query
 router = APIRouter()
 
 
-class ActionLogResponse(pydantic_model_creator(ActionLog)):  # type: ignore
-    admin_id: int
-
-
-class ActionLogsResponse(BaseModel):
-    total: int
-    data: list[ActionLogResponse]
-
-
-@router.get("", response_model=ActionLogsResponse)
+@router.get("")
 async def get_actions_logs(
     admin_id: int | None = None,
     method: str | None = None,
