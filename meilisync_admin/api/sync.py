@@ -113,12 +113,13 @@ async def refresh(
             Scheduler.remove_source(sync.source.pk)
             progress = Runner.get_progress(sync.source.pk)
             await progress.set(**await source_obj.get_current_progress())
+            index_exists = await sync.meili_client.index_exists()
+            if not index_exists:
+                await sync.create_index()
             count = await sync.meili_client.refresh_data(
                 sync.index,
                 sync.primary_key,
-                source_obj.get_full_data(
-                    sync.sync_config, sync.meilisearch.insert_size or 10000
-                ),
+                source_obj.get_full_data(sync.sync_config, sync.meilisearch.insert_size or 10000),
             )
             logger.success(f"Refreshed {count} records!")
             await Scheduler.restart_source(
