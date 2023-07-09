@@ -90,7 +90,7 @@ class Sync(BaseModel):
         try:
             self.meilisearch_count = await self.meili_client.get_count(self.index)
         except MeilisearchApiError as e:
-            logger.exception(f'Failed to get count for index "{self.index}"')
+            logger.exception(f'Failed to get count for index "{self.index}": {e}')
             self.meilisearch_count = 0
 
 
