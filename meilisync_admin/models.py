@@ -72,7 +72,7 @@ class Sync(BaseModel):
     async def update_settings(self):
         if self.index_settings:
             await self.meili_client.client.index(self.index).update_settings(
-                MeilisearchSettings.parse_obj(self.index_settings)
+                MeilisearchSettings.model_validate(self.index_settings)
             )
 
     @property
