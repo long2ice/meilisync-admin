@@ -8,6 +8,7 @@ FROM python:3.11 as builder
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 RUN mkdir -p /meilisync_admin
 WORKDIR /meilisync_admin
+RUN pip3 install pip --upgrade && pip3 install poetry --upgrade --pre && poetry install --no-root --only main
 COPY pyproject.toml poetry.lock /meilisync_admin/
 ENV POETRY_VIRTUALENVS_CREATE false
 COPY . /meilisync_admin
