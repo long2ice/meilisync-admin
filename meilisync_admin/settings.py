@@ -1,5 +1,5 @@
 import sentry_sdk
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from sentry_sdk.integrations.redis import RedisIntegration
 
 
@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     DB_URL: str
     REDIS_URL: str
-    ENV = "production"
+    ENV: str = "production"
     SENTRY_DSN: str | None
     SECRET_KEY: str
     LICENSE: str
