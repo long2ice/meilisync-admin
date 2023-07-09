@@ -13,7 +13,6 @@ from meilisync_admin.exceptions import (
     not_exists_exception_handler,
     validation_exception_handler,
 )
-from meilisync_admin.license import load_license
 from meilisync_admin.log import init_logging
 from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.settings import TORTOISE_ORM, settings
@@ -60,7 +59,6 @@ async def startup():
     await aerich.init()
     await aerich.upgrade()
     await Scheduler.startup()
-    await load_license()
 
 
 @app.on_event("shutdown")

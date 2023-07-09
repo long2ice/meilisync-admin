@@ -25,7 +25,6 @@ passlib = { version = "*", extras = ["bcrypt"] }
 typer = { version = "*", extras = ["all"] }
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
-py-machineid = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

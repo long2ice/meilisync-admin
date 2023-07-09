@@ -1,16 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from meilisync_admin.api import action_log as action_log_api
-from meilisync_admin.api import (
-    admin,
-    auth,
-    init,
-    license,
-    meilisearch,
-    source,
-    stat,
-    sync,
-)
+from meilisync_admin.api import admin, auth, init, meilisearch, source, stat, sync
 from meilisync_admin.depends import action_log, auth_required, set_i18n
 
 router = APIRouter(dependencies=[Depends(set_i18n)])
@@ -29,5 +20,4 @@ auth_router.include_router(
 
 router.include_router(auth.router, prefix="/auth", tags=["Auth"])
 router.include_router(init.router, prefix="/init", tags=["Init"])
-router.include_router(license.router, prefix="/license", tags=["License"])
 router.include_router(auth_router)

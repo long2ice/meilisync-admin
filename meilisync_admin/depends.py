@@ -6,7 +6,6 @@ from fastapi_jwt import JwtAuthorizationCredentials
 from starlette.requests import Request
 from starlette.status import HTTP_403_FORBIDDEN
 
-from meilisync_admin import license
 from meilisync_admin.auth import access_security
 from meilisync_admin.constants import MASK_KEYS
 from meilisync_admin.models import ActionLog, Admin
@@ -72,11 +71,4 @@ async def action_log(
             content=content,
             path=path,
             method=method,
-        )
-
-
-async def check_license():
-    if license.LICENSE.is_expired:
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN, detail=i18n.t("license_expired")
         )
