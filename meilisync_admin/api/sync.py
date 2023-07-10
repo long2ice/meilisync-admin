@@ -44,7 +44,7 @@ async def get_list(
     await asyncio.gather(
         *[item.get_count() for item in data],
     )
-    data = [item.__dict__ for item in data]
+    data = [item.__dict__ for item in data]  # type: ignore
     return dict(total=total, data=data)
 
 
@@ -106,7 +106,9 @@ async def refresh(
             count = await sync.meili_client.refresh_data(
                 sync.index,
                 sync.primary_key,
-                source_obj.get_full_data(sync.sync_config, sync.meilisearch.insert_size or 10000),
+                source_obj.get_full_data(
+                    sync.sync_config, sync.meilisearch.insert_size or 10000
+                ),
             )
             logger.success(f"Refreshed {count} records!")
             await Scheduler.restart_source(
