@@ -12,7 +12,7 @@ packages = [{ include = "meilisync_admin" }]
 repository = "https://github.com/meilisync/meilisync-admin.git"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.8"
 meilisync = { git = "https://github.com/meilisync/meilisync.git", extras = [
     "all",
 ], branch = "dev" }
@@ -50,7 +50,7 @@ build-backend = "poetry.core.masonry.api"
 profile = "black"
 
 [tool.black]
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
 preview = true
 
 [tool.pytest.ini_options]
