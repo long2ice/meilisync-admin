@@ -42,6 +42,11 @@ services:
       - SENTRY_DSN=
 ```
 
+## Frontend
+
+The frontend of `meilisync-admin` is written in [Vue.js](https://vuejs.org/), you can find the source code
+at [meilisync-web](https://github.com/long2ice/meilisync-web).
+
 ## License
 
 This project is licensed under the
