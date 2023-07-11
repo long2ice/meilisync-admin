@@ -1,6 +1,7 @@
 # meilisync-admin
 
-This is a web admin dashboard for [meilisync](https://github.com/long2ice/meilisync).
+This is a web admin dashboard for [meilisync](https://github.com/long2ice/meilisync), providing a user-friendly
+interface to manage meilisync.
 
 ## Features
 
@@ -22,6 +23,24 @@ Check the demo at: https://demo.meilisync.com
 ## Screenshot
 
 ![meilisync-admin](./images/meilisync-admin.png)
+
+## Deployment
+
+We recommend using [docker-compose](https://docs.docker.com/compose/) to deploy meilisync-admin.
+
+```yaml
+version: "3"
+services:
+  meilisync-admin:
+    image: ghcr.io/long2ice/meilisync-admin/meilisync-admin
+    restart: always
+    network_mode: host
+    environment:
+      - DB_URL=mysql://root:password@localhost:3306/meilisync_admin
+      - REDIS_URL=redis://localhost:6379/0
+      - SECRET_KEY=secret
+      - SENTRY_DSN=
+```
 
 ## License
 
