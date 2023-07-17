@@ -1,4 +1,3 @@
-import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
@@ -41,10 +40,6 @@ async def get_list(
         .offset(query.offset)
         .order_by(*query.orders)
     )
-    await asyncio.gather(
-        *[item.get_count() for item in data],
-    )
-    data = [item.__dict__ for item in data]  # type: ignore
     return dict(total=total, data=data)
 
 
@@ -172,3 +167,13 @@ async def logs(
 @router.delete("/logs/{pks}", status_code=HTTP_204_NO_CONTENT, summary="删除同步记录")
 async def delete_sync_logs(pks: str):
     await SyncLog.filter(pk__in=pks.split(",")).delete()
+
+
+@router.get("/{pk}/progress", summary="获取同步进度")
+async def get_progress(pk: int):
+    sync = await Sync.get(pk=pk).select_related("source", "meilisearch")
+    await sync.get_count()
+    return {
+        "source_count": sync.source_count,
+        "meilisearch_count": sync.meilisearch_count,
+    }
