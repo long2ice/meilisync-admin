@@ -29,7 +29,7 @@ async def get_list_basic():
 
 class Body(BaseModel):
     label: str
-    api_key: str | None
+    api_key: str | None = None
     api_url: str
     insert_size: int | None
     insert_interval: int | None

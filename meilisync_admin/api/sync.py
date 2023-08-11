@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from meilisearch_python_async.models.settings import MeilisearchSettings
