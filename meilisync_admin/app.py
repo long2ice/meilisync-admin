@@ -60,7 +60,7 @@ async def startup():
     init_logging()
     aerich = Command(TORTOISE_ORM)
     await aerich.init()
-    await aerich.upgrade()
+    await aerich.upgrade(True)
     await Scheduler.startup()
 
 
