@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
-from meilisearch_python_async.models.settings import MeilisearchSettings
+from meilisearch_python_sdk.models.settings import MeilisearchSettings
 from meilisync.enums import EventType
 from pydantic import BaseModel
 from starlette.background import BackgroundTasks
@@ -131,7 +131,7 @@ async def update(
 ):
     sync = await Sync.get(pk=pk).select_related("meilisearch")
     try:
-        await sync.update_from_dict(body.dict()).save()
+        await sync.update_from_dict(body.model_dump()).save()
         await sync.update_settings()
     except IntegrityError:
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail="Sync already exists")

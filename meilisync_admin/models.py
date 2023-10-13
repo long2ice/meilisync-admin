@@ -1,8 +1,8 @@
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-from meilisearch_python_async.errors import MeilisearchApiError
-from meilisearch_python_async.models.settings import MeilisearchSettings
+from meilisearch_python_sdk.errors import MeilisearchApiError
+from meilisearch_python_sdk.models.settings import MeilisearchSettings
 from meilisync.discover import get_source
 from meilisync.enums import EventType, SourceType
 from meilisync.meili import Meili

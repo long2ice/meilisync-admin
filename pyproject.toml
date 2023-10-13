@@ -26,7 +26,6 @@ typer = { version = "*", extras = ["all"] }
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
 pydantic-settings = "*"
-fastapi-health = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"

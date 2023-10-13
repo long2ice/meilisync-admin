@@ -1,7 +1,6 @@
 from aerich import Command
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
-from fastapi_health import health
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from tortoise.contrib.fastapi import register_tortoise
@@ -14,7 +13,6 @@ from meilisync_admin.exceptions import (
     not_exists_exception_handler,
     validation_exception_handler,
 )
-from meilisync_admin.health import is_database_online
 from meilisync_admin.log import init_logging
 from meilisync_admin.scheduler import Scheduler
 from meilisync_admin.settings import TORTOISE_ORM, settings
@@ -42,7 +40,6 @@ else:
         docs_url=None,
     )
 app.include_router(router, prefix="/api")
-app.add_api_route("/api/health", health([is_database_online]))
 register_tortoise(
     app,
     config=TORTOISE_ORM,
