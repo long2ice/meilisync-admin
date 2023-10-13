@@ -15,7 +15,7 @@ interface to manage meilisync.
 
 ## Demo
 
-Check the demo at: https://demo.meilisync.com
+Check the demo at: https://meilisync-admin-demo.long2ice.io
 
 - **email**: `demo@meilisync.com`
 - **password**: `demo`
