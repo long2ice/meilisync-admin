@@ -98,7 +98,7 @@ async def refresh(
             if not index_exists:
                 await sync.create_index()
             count = await sync.meili_client.refresh_data(
-                sync,
+                sync.sync_config,
                 source_obj.get_full_data(
                     sync.sync_config, sync.meilisearch.insert_size or 10000
                 ),
