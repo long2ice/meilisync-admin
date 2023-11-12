@@ -65,22 +65,18 @@ async def oauth_login(request: Request, redirect_uri: str):
         client = oauth.github
         rv = await client.create_authorization_url(redirect_uri)
         await client.save_authorize_data(request, redirect_uri=redirect_uri, **rv)
-        ret.append(
-            {
-                "type": "github",
-                "url": rv["url"],
-            }
-        )
+        ret.append({
+            "type": "github",
+            "url": rv["url"],
+        })
     if settings.enable_google_oauth:
         client = oauth.google
         rv = await client.create_authorization_url(redirect_uri)
         await client.save_authorize_data(request, redirect_uri=redirect_uri, **rv)
-        ret.append(
-            {
-                "type": "google",
-                "url": rv["url"],
-            }
-        )
+        ret.append({
+            "type": "google",
+            "url": rv["url"],
+        })
     return ret
 
 

@@ -4,16 +4,16 @@ RUN git clone https://$GIT_TOKEN@github.com/long2ice/meilisync-web.git /meilisyn
 WORKDIR /meilisync-web
 RUN npm install && npm run build
 
-FROM python:3.11 as builder
+FROM python:3.12 as builder
 RUN mkdir -p /meilisync_admin
 WORKDIR /meilisync_admin
 COPY pyproject.toml poetry.lock /meilisync_admin/
 ENV POETRY_VIRTUALENVS_CREATE false
 RUN pip3 install pip --upgrade && pip3 install poetry --upgrade --pre && poetry install --no-root --only main
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 WORKDIR /meilisync_admin
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY . /meilisync_admin
 COPY --from=frontend-builder /meilisync-web/dist /meilisync_admin/static

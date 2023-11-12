@@ -76,8 +76,7 @@ class Runner:
             meili, insert_interval = self.meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
                 _, count = await meili.add_full_data(
-                    ss.index_name,
-                    ss.pk,
+                    ss,
                     self.source_obj.get_full_data(ss, insert_interval or 10000),
                 )
                 if count > 0:
