@@ -13,7 +13,7 @@ repository = "https://github.com/meilisync/meilisync-admin.git"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-meilisync = { version = "^0.1.2", extras = ["all"] }
+meilisync = { git = "https://github.com/long2ice/meilisync.git", extras = ["all"] }
 tortoise-orm = "*"
 aerich = "*"
 fastapi = { version = "*", extras = ["all"] }

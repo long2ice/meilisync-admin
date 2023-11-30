@@ -863,23 +863,21 @@ name = "meilisync"
 version = "0.1.2"
 description = "Realtime sync data from MySQL/PostgreSQL/MongoDB to meilisearch"
 optional = false
-python-versions = ">=3.9,<4.0"
-files = [
-    {file = "meilisync-0.1.2-py3-none-any.whl", hash = "sha256:5128cfd15ea1963e3ca6beb57d0b78ff60f08719b8db40e05fec999cbc15509b"},
-    {file = "meilisync-0.1.2.tar.gz", hash = "sha256:3773da06fe096b7a5b7659b557a08048917cb0ed6b70675d54eb63f87acf8bf5"},
-]
+python-versions = "^3.9"
+files = []
+develop = false
 
 [package.dependencies]
 aiofiles = "*"
-asyncmy = {version = ">=0.2.9,<0.3.0", optional = true, markers = "extra == \"all\" or extra == \"mysql\""}
+asyncmy = "^0.2.9"
 loguru = "*"
 meilisearch-python-sdk = "*"
-motor = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"mongodb\""}
-psycopg2-binary = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"postgres\""}
+motor = {version = "*", optional = true}
+psycopg2-binary = {version = "*", optional = true}
 pydantic-settings = "*"
 pyyaml = "*"
-redis = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"redis\""}
-sentry-sdk = {version = "*", optional = true, markers = "extra == \"all\" or extra == \"sentry\""}
+redis = "*"
+sentry-sdk = "*"
 typer = {version = "*", extras = ["all"]}
 
 [package.extras]
@@ -889,6 +887,12 @@ mysql = ["asyncmy (>=0.2.9,<0.3.0)"]
 postgres = ["psycopg2-binary"]
 redis = ["redis"]
 sentry = ["sentry-sdk"]
+
+[package.source]
+type = "git"
+url = "https://github.com/long2ice/meilisync.git"
+reference = "HEAD"
+resolved_reference = "36f75255235e439784429706ac7081a5a963c88d"
 
 [[package]]
 name = "motor"
@@ -2325,4 +2329,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "954a428c95e0d52dd74026fc2a57f59c4813db1cc34367f8c63950575348617d"
+content-hash = "72fdf0eb33ee8eb1ae88bd73f1a6efa0c3876213788192df5bc10bec29ecd3be"
