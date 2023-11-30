@@ -25,7 +25,10 @@ class Runner:
         self.collections_map: Dict[SyncSettings, EventCollection] = {}
         self.tables_sync_settings_map: Dict[str, List[Tuple[SyncSettings, Sync]]] = {}
         self.tables_map_reverse: Dict[int, str] = {}
-        self.meili_map: Dict[SyncSettings, Tuple[Meili, int]] = {}
+        self.meili_map: Dict[
+            SyncSettings,
+            Tuple[Meili, int, dict],
+        ] = {}
         self.sync_settings: List[SyncSettings] = []
         self._tasks: List[Task] = []
 
@@ -65,6 +68,7 @@ class Runner:
             self.meili_map[sync_setting] = (
                 sync.meili_client,
                 sync.meilisearch.insert_interval,
+                sync.index_settings,
             )
             self.sync_settings.append(
                 sync_setting,
@@ -73,8 +77,10 @@ class Runner:
             self.current_progress, list(self.tables_sync_settings_map.keys())
         )
         for ss in self.sync_settings:
-            meili, insert_interval = self.meili_map[ss]
+            meili, insert_interval, index_settings = self.meili_map[ss]
             if ss.full and not await meili.index_exists(ss.index_name):
+                await meili.client.create_index(ss.index_name, primary_key=ss.pk)
+                await meili.client.index(ss.index_name).update_settings(index_settings)
                 _, count = await meili.add_full_data(
                     ss,
                     self.source_obj.get_full_data(ss, insert_interval or 10000),
