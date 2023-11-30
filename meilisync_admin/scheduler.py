@@ -145,7 +145,7 @@ class Runner:
                 continue
             async with self.lock:
                 for ss, sync_model in ss_list:
-                    m, _ = self.meili_map[ss]
+                    m, _, _ = self.meili_map[ss]
                     meilisearch = sync_model.meilisearch
                     self.stats.setdefault(sync_model.pk, {}).setdefault(event.type, 0)
                     self.stats[sync_model.pk][event.type] += 1

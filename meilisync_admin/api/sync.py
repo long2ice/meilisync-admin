@@ -70,7 +70,7 @@ async def create(
     body: Body,
 ):
     try:
-        sync = await Sync.create(**body.dict())
+        sync = await Sync.create(**body.model_dump())
         await sync.meilisearch
         await sync.create_index()
     except IntegrityError:

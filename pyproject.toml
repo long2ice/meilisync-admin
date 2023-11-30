@@ -24,6 +24,7 @@ typer = { version = "*", extras = ["all"] }
 authlib = "*"
 sentry-sdk = { version = "*", extras = ["fastapi"] }
 pydantic-settings = "*"
+meilisearch-python-sdk = { git = "https://github.com/long2ice/meilisearch-python-sdk.git" }
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
