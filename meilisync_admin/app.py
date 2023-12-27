@@ -61,9 +61,9 @@ register_tortoise(
     config=TORTOISE_ORM,
 )
 app.mount("/", SPAStaticFiles(directory="static", html=True), name="static")
-app.add_exception_handler(HTTPException, custom_http_exception_handler)
-app.add_exception_handler(DoesNotExist, not_exists_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(HTTPException, custom_http_exception_handler)  # type: ignore
+app.add_exception_handler(DoesNotExist, not_exists_exception_handler)  # type: ignore
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore
 app.add_exception_handler(Exception, exception_handler)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
