@@ -904,7 +904,7 @@ sentry = ["sentry-sdk"]
 type = "git"
 url = "https://github.com/long2ice/meilisync.git"
 reference = "HEAD"
-resolved_reference = "e33a88c8187165af5e33b8e3e30c35e237793d57"
+resolved_reference = "ce8b3ce947f1beb749d7bb40e28979434b8fdda9"
 
 [[package]]
 name = "motor"
